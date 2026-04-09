@@ -24,7 +24,8 @@ import {
   UserPlus,
   CreditCard,
   MapPin,
-  LayoutGrid
+  LayoutGrid,
+  Timer
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { mailService, generateRandomString } from './services/mailService';
@@ -76,6 +77,7 @@ import { GmailGenerator } from './components/tools/GmailGenerator';
 import { AddressGenerator } from './components/tools/AddressGenerator';
 import { ProxyChecker } from './components/tools/ProxyChecker';
 import { QRCodeGenerator } from './components/tools/QRCodeGenerator';
+import { TimerTool } from './components/tools/TimerTool';
 
 import { getCardBrand, luhnCheck } from './lib/ccUtils';
 
@@ -104,7 +106,7 @@ export default function App() {
   const [showClearInboxConfirm, setShowClearInboxConfirm] = useState(false);
   const [viewMode, setViewMode] = useState<'html' | 'text'>('html');
   const [toast, setToast] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'mail' | 'cc-gen' | 'cc-check' | 'gmail-gen' | 'address-gen' | 'proxy-check' | 'qr-gen'>(() => {
+  const [activeTab, setActiveTab] = useState<'mail' | 'cc-gen' | 'cc-check' | 'gmail-gen' | 'address-gen' | 'proxy-check' | 'qr-gen' | 'timer'>(() => {
     const saved = localStorage.getItem('securehub_active_tab');
     return (saved as any) || 'mail';
   });
@@ -1046,7 +1048,8 @@ export default function App() {
             { id: 'cc-check', name: 'CC Checker', icon: ShieldCheck, color: 'cyber-green' },
             { id: 'proxy-check', name: 'Proxy Check', icon: Globe, color: 'cyber-cyan' },
             { id: 'qr-gen', name: 'QR Generator', icon: LayoutGrid, color: 'cyber-purple' },
-            { id: 'address-gen', name: 'Address Gen', icon: MapPin, color: 'cyber-pink' }
+            { id: 'address-gen', name: 'Address Gen', icon: MapPin, color: 'cyber-pink' },
+            { id: 'timer', name: 'Secure Timer', icon: Timer, color: 'cyber-amber' }
           ].map((item) => (
             <button
               key={item.id}
@@ -1116,7 +1119,8 @@ export default function App() {
           { id: 'cc-check', icon: ShieldCheck, color: 'cyber-green' },
           { id: 'proxy-check', icon: Globe, color: 'cyber-cyan' },
           { id: 'qr-gen', icon: LayoutGrid, color: 'cyber-purple' },
-          { id: 'address-gen', icon: MapPin, color: 'cyber-pink' }
+          { id: 'address-gen', icon: MapPin, color: 'cyber-pink' },
+          { id: 'timer', icon: Timer, color: 'cyber-amber' }
         ].map((item) => (
           <button
             key={item.id}
@@ -1478,6 +1482,12 @@ export default function App() {
       {activeTab === 'qr-gen' && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <QRCodeGenerator />
+        </motion.div>
+      )}
+
+      {activeTab === 'timer' && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <TimerTool />
         </motion.div>
       )}
         </div>
