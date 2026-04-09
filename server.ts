@@ -1,12 +1,11 @@
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
+import fs from "fs";
 import axios from "axios";
 import dotenv from "dotenv";
 
 dotenv.config();
-
-console.log(">>> SECUREHUB SERVER BOOTING <<<");
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,12 +16,11 @@ async function startServer() {
 
   app.use(express.json());
 
-  // Health check route
+  // API routes
   app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", mode: process.env.NODE_ENV || 'development' });
+    res.json({ status: "ok" });
   });
 
-  // Proxy Checker API Route
   app.post("/api/proxy-check", async (req, res) => {
     const { ips, provider = 'fraudlogix' } = req.body;
     const fraudlogixKey = process.env.FRAUDLOGIX_API_KEY || "fL6S4nutw7a8v8cLnzFRN44fjtF4P8XE8P6a3lyV";
@@ -37,22 +35,10 @@ async function startServer() {
         ips.map(async (ip) => {
           try {
             if (provider === 'ipqs') {
-              // IPQualityScore API
               const response = await axios.get(`https://www.ipqualityscore.com/api/json/ip/${ipqsKey}/${ip}`, {
-                params: {
-                  strictness: 1,
-                  allow_public_access_points: 'true',
-                  lighter_penalties: 'false'
-                },
+                params: { strictness: 1, allow_public_access_points: 'true', lighter_penalties: 'false' },
                 timeout: 5000
               });
-
-              console.log(`IPQS check for ${ip}:`, response.data);
-
-              if (!response.data.success) {
-                throw new Error(response.data.message || "IPQS API Error");
-              }
-
               return {
                 ip,
                 status: "success",
@@ -62,11 +48,8 @@ async function startServer() {
                   is_proxy: response.data.proxy || false,
                   is_vpn: response.data.vpn || false,
                   is_tor: response.data.tor || false,
-                  is_datacenter: response.data.is_crawler === false && response.data.proxy === true, // Approximation
+                  is_datacenter: response.data.is_crawler === false && response.data.proxy === true,
                   is_bot: response.data.is_crawler || false,
-                  is_masked: false,
-                  is_abnormal: response.data.fraud_score > 80,
-                  risk_events: response.data.fraud_score > 50 ? 1 : 0,
                   asn: response.data.asn || 'N/A',
                   organization: response.data.organization || 'N/A',
                   isp: response.data.isp || 'N/A',
@@ -79,15 +62,11 @@ async function startServer() {
                 }
               };
             } else {
-              // Fraudlogix IP Reputation API - v5
               const response = await axios.get(`https://iplist.fraudlogix.com/v5`, {
                 params: { ip: ip },
                 headers: { "x-api-key": fraudlogixKey },
                 timeout: 5000
               });
-              
-              console.log(`Fraudlogix check for ${ip}:`, response.data);
-              
               return {
                 ip,
                 status: "success",
@@ -114,57 +93,45 @@ async function startServer() {
               };
             }
           } catch (error: any) {
-            const errorMessage = error.response?.data?.message || error.message;
-            console.error(`${provider.toUpperCase()} check failed for ${ip}:`, error.response?.data || error.message);
-            
-            const cleanMessage = typeof errorMessage === 'string' && errorMessage.includes('<!DOCTYPE HTML') 
-              ? "Invalid API Endpoint or Server Error (HTML Response)" 
-              : errorMessage;
-
-            return {
-              ip,
-              status: "error",
-              message: cleanMessage
-            };
+            return { ip, status: "error", message: error.message };
           }
         })
       );
-
       res.json({ results });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
 
-  console.log(`Server starting in ${process.env.NODE_ENV || 'development'} mode`);
+  const distPath = path.resolve(process.cwd(), "dist");
+  const hasBuild = fs.existsSync(distPath);
 
-  // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
-    console.log("Using Vite middleware (Development)");
+  if (hasBuild) {
+    console.log(">>> SECUREHUB: SERVING FROM DIST (PRODUCTION) <<<");
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
+  } else {
+    console.log(">>> SECUREHUB: SERVING VIA VITE (DEVELOPMENT) <<<");
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), "dist");
-    const indexPath = path.join(distPath, "index.html");
     
-    console.log(`[Production] Serving static files from: ${distPath}`);
-    console.log(`[Production] Index file path: ${indexPath}`);
-    
-    app.use(express.static(distPath));
-    
-    app.get("*", (req, res) => {
-      // Use absolute path to avoid any issues with relative paths
-      const absoluteIndexPath = path.resolve(process.cwd(), "dist", "index.html");
-      res.sendFile(absoluteIndexPath, (err) => {
-        if (err) {
-          console.error(`[Production] Error sending index.html from ${absoluteIndexPath}:`, err);
-          res.status(500).send("Internal Server Error - Could not load app. Please try refreshing.");
-        }
-      });
+    app.get("*", async (req, res, next) => {
+      const url = req.originalUrl;
+      try {
+        const templatePath = path.resolve(process.cwd(), "index.html");
+        let template = fs.readFileSync(templatePath, "utf-8");
+        template = await vite.transformIndexHtml(url, template);
+        res.status(200).set({ "Content-Type": "text/html" }).end(template);
+      } catch (e) {
+        vite.ssrFixStacktrace(e as Error);
+        next(e);
+      }
     });
   }
 
@@ -174,6 +141,6 @@ async function startServer() {
 }
 
 startServer().catch(err => {
-  console.error("CRITICAL: Failed to start server:", err);
+  console.error("CRITICAL ERROR:", err);
   process.exit(1);
 });
