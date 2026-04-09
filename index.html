@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SecureHub | Extreme Suite v4.0</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2300ffff%22/><path d=%22M50 25 L75 35 L75 65 L50 75 L25 65 L25 35 Z%22 fill=%22%230a0a0c%22/><path d=%22M50 35 L65 40 L65 60 L50 65 L35 60 L35 40 Z%22 fill=%22%2300ffff%22/></svg>" />
+    <meta name="theme-color" content="#00ffff" />
+    <meta property="og:title" content="SecureHub Extreme Suite" />
+    <meta property="og:description" content="Ultimate security intelligence and credit card generation toolkit." />
+    <meta property="og:image" content="https://picsum.photos/seed/securehub/1200/630" />
+    <script>
+      // Fix for "Cannot set property fetch of #<Window> which has only a getter"
+      // This happens when some libraries try to polyfill or override window.fetch
+      (function() {
+        var originalFetch = window.fetch;
+        function patch(obj, prop) {
+          try {
+            var descriptor = Object.getOwnPropertyDescriptor(obj, prop);
+            // If it's already writable or has a setter, we might not need to do anything
+            // but to be safe and prevent the "only a getter" error, we redefine it if configurable
+            if (!descriptor || descriptor.configurable) {
+              Object.defineProperty(obj, prop, {
+                get: function() { return originalFetch; },
+                set: function(v) { 
+                  console.warn('Intercepted attempt to override ' + prop + '. Ignoring to prevent crash.');
+                },
+                configurable: true,
+                enumerable: true
+              });
+              return true;
+            }
+          } catch (e) {
+            console.warn('Could not patch ' + prop + ' on', obj, e);
+          }
+          return false;
+        }
+
+        // Try window first, then Window.prototype
+        if (!patch(window, 'fetch')) {
+          patch(Window.prototype, 'fetch');
+        }
+        
+        // Safety: ensure fetch is globally available
+        if (typeof fetch === 'undefined' && originalFetch) {
+          window.fetch = originalFetch;
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

@@ -1,0 +1,46 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        ((exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'admin') ||
+         (request.auth.token.email == "mdatikulislamjuwel6@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // Domain Validators
+    function isValidUserProfile(data) {
+      let allowedFields = ['uid', 'email', 'displayName', 'savedAccounts', 'createdAt', 'updatedAt', 'role'];
+      return data.keys().hasOnly(allowedFields) &&
+             data.get('uid', '') == request.auth.uid &&
+             (data.get('email', '') == '' || data.email == null || data.get('email', '').matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$')) &&
+             (!('displayName' in data) || data.displayName == null || data.displayName is string) &&
+             data.get('savedAccounts', []) is list &&
+             (!('createdAt' in data) || data.createdAt is string) &&
+             (!('updatedAt' in data) || data.updatedAt is string) &&
+             (!('role' in data) || data.role == null || data.role in ['admin', 'user']);
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid) && isValidUserProfile(request.resource.data) && 
+                    (request.resource.data.get('role', 'user') == 'user' || isAdmin());
+      allow update: if isOwner(uid) && isValidUserProfile(request.resource.data) && 
+                    (request.resource.data.get('role', resource.data.get('role', 'user')) == resource.data.get('role', 'user') || isAdmin());
+      allow delete: if isAdmin();
+    }
+  }
+}
