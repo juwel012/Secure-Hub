@@ -81,6 +81,12 @@ export const ProxyChecker: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ips, provider })
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Server Error: ${response.status}`);
+      }
+
       const data = await response.json();
       
       const now = new Date().toISOString();
@@ -113,8 +119,15 @@ export const ProxyChecker: React.FC = () => {
       if (newResults.length > 0) {
         setExpandedIp(newResults[0].ip);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Proxy check failed:', error);
+      // Add a virtual error result to show the user what happened
+      const errorResults: ProxyResult[] = ips.map(ip => ({
+        ip,
+        status: 'error',
+        message: error.message || 'Connection Failed'
+      }));
+      setResults(errorResults);
     } finally {
       setChecking(false);
     }
@@ -339,7 +352,7 @@ export const ProxyChecker: React.FC = () => {
                         <div className={`text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-lg transition-all ${
                           res.status === 'error' ? 'text-cyber-red bg-cyber-red/10 border border-cyber-red/20' : res.data?.is_proxy ? 'text-cyber-amber bg-cyber-amber/10 border border-cyber-amber/20' : 'text-cyber-green bg-cyber-green/10 border border-cyber-green/20'
                         }`}>
-                          {res.status === 'error' ? 'ERROR' : res.data?.is_proxy ? 'PROXY' : 'CLEAN'}
+                          {res.status === 'error' ? (res.message || 'ERROR') : res.data?.is_proxy ? 'PROXY' : 'CLEAN'}
                         </div>
                       </div>
                     </motion.div>
