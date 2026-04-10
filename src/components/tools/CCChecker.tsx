@@ -62,234 +62,201 @@ export const CCChecker: React.FC<CCCheckerProps> = ({ state, setState, onProcess
   };
 
   return (
-    <div className="p-4 sm:p-10 glass rounded-[2rem] sm:rounded-[3rem] shadow-2xl shadow-black/50 text-white relative overflow-hidden">
-      {/* Background Glows */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-cyber-cyan/10 rounded-full blur-[120px] -mr-48 -mt-48" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyber-purple/10 rounded-full blur-[120px] -ml-48 -mb-48" />
-
-      <div className="relative z-10">
-        <div className="flex flex-col lg:flex-row items-center justify-between mb-8 sm:mb-12 gap-6 sm:gap-8">
-          <div className="flex items-center gap-4 sm:gap-6 w-full lg:w-auto">
-            <div className="relative">
-              <div className="absolute inset-0 bg-cyber-cyan rounded-2xl blur-lg opacity-20 animate-pulse" />
-              <div className="relative p-3 sm:p-5 bg-dark-900 rounded-2xl border border-cyber-cyan/30">
-                <Cpu className="w-6 h-6 sm:w-10 sm:h-10 text-cyber-cyan" />
+    <div className="space-y-8">
+      {/* Header & Stats Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-4">
+          <div className="p-8 glass rounded-[2.5rem] border border-white/5 relative overflow-hidden h-full flex flex-col justify-center">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-cyber-cyan/5 rounded-full blur-[40px] -mr-16 -mt-16" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-cyber-cyan/10 rounded-2xl flex items-center justify-center border border-cyber-cyan/20 shadow-[0_0_20px_rgba(0,245,212,0.1)]">
+                  <ShieldCheck className="w-6 h-6 text-cyber-cyan" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Card <span className="text-cyber-cyan">Validator</span></h2>
+                  <p className="text-[10px] font-black text-cyber-cyan/60 uppercase tracking-[0.3em]">Security Verification v4.0</p>
+                </div>
               </div>
-            </div>
-            <div>
-              <h2 className="text-xl sm:text-3xl font-black tracking-tight text-white">Extreme Premium Checker</h2>
-              <p className="text-[8px] sm:text-xs font-black text-cyber-cyan uppercase tracking-[0.3em] mt-1">100% Accuracy Engine v4.0</p>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center gap-4 bg-dark-900/80 backdrop-blur-xl p-2 sm:p-3 rounded-2xl border border-white/5 w-full lg:w-auto">
-            <div className="flex items-center gap-3 px-4 border-b sm:border-b-0 sm:border-r border-white/10 w-full sm:w-auto pb-2 sm:pb-0">
-              <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-cyber-cyan" />
-              <span className="text-[8px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest">Gate</span>
-            </div>
-            <div className="flex gap-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 no-scrollbar">
-              {(['AUTH', 'CCN', 'CVV', 'PAYATE', 'ALL'] as const).map((g) => (
-                <button
-                  key={g}
-                  onClick={() => setGate(g)}
-                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[8px] sm:text-[10px] font-black uppercase tracking-widest transition-all border shrink-0 ${
-                    gate === g 
-                      ? 'bg-cyber-cyan text-dark-950 border-cyber-cyan shadow-lg shadow-cyber-cyan/20' 
-                      : 'bg-dark-800 text-slate-500 border-white/5 hover:border-cyber-cyan/30'
-                  }`}
-                >
-                  {g}
-                </button>
-              ))}
+              <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                High-precision validation engine for verifying virtual card integrity across multiple security gates and payment protocols.
+              </p>
             </div>
           </div>
+        </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 w-full lg:w-auto">
+        <div className="lg:col-span-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 h-full">
             {[
-              { label: 'Total', val: stats.total, color: 'slate' },
-              { label: 'Live', val: stats.live, color: 'cyber-green', pulse: true },
-              { label: 'Die', val: stats.die, color: 'cyber-red' },
-              { label: 'Unknown', val: stats.unknown, color: 'cyber-amber' }
+              { label: 'Total Cards', val: stats.total, color: 'text-white', bg: 'bg-white/5', icon: Activity },
+              { label: 'Live Cards', val: stats.live, color: 'text-cyber-green', bg: 'bg-cyber-green/10', icon: Check, glow: 'shadow-[0_0_20px_rgba(0,255,157,0.1)]' },
+              { label: 'Dead Cards', val: stats.die, color: 'text-cyber-red', bg: 'bg-cyber-red/10', icon: XCircle },
+              { label: 'Unknown', val: stats.unknown, color: 'text-cyber-amber', bg: 'bg-cyber-amber/10', icon: HelpCircle }
             ].map((s) => (
-              <div key={s.label} className={`px-3 sm:px-6 py-2 sm:py-4 bg-dark-900/50 border border-white/5 rounded-2xl text-center`}>
-                <p className={`text-[8px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1`}>{s.label}</p>
-                <p className={`text-sm sm:text-xl font-black ${s.color === 'cyber-green' ? 'text-cyber-green' : s.color === 'cyber-red' ? 'text-cyber-red' : s.color === 'cyber-amber' ? 'text-cyber-amber' : 'text-white'}`}>{s.val}</p>
+              <div key={s.label} className={`p-6 glass rounded-[2rem] border border-white/5 flex flex-col items-center justify-center text-center transition-all hover:border-white/10 ${s.glow || ''}`}>
+                <div className={`w-10 h-10 ${s.bg} rounded-xl flex items-center justify-center mb-3`}>
+                  <s.icon className={`w-5 h-5 ${s.color}`} />
+                </div>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{s.label}</p>
+                <p className={`text-2xl font-black ${s.color}`}>{s.val}</p>
               </div>
             ))}
           </div>
         </div>
+      </div>
 
-        <div className="mb-8 p-6 bg-cyber-amber/5 border border-cyber-amber/20 rounded-[2rem] flex items-start gap-4">
-          <AlertCircle className="w-6 h-6 text-cyber-amber shrink-0 mt-1" />
-          <div>
-            <p className="text-[10px] font-black text-cyber-amber uppercase tracking-widest mb-1">Disclaimer & Usage Note</p>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              This tool is for **educational and testing purposes only**. Generated cards are simulated assets and will **NOT** work on real merchants (like Amazon, Audible, etc.) as they are not real financial instruments. Real-world payment gateways have strict security protocols that these simulated checks do not bypass.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
-          {/* Input Section */}
-          <div className="xl:col-span-12 space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-cyber-cyan to-cyber-purple rounded-[2.5rem] blur opacity-10 group-focus-within:opacity-25 transition duration-1000" />
-                <div className="relative">
-                  <div className="absolute top-5 left-6 flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                    <Terminal className="w-4 h-4" /> Input Terminal
-                  </div>
-                  <textarea
-                    placeholder="PASTE CARDS HERE (FORMAT: NUMBER|MM|YYYY|CVV)"
-                    className="w-full h-[200px] sm:h-[300px] p-6 sm:p-12 pt-12 sm:pt-16 bg-dark-900/80 backdrop-blur-xl border border-white/5 rounded-[1.5rem] sm:rounded-[2.5rem] focus:ring-2 focus:ring-cyber-cyan/50 outline-none transition-all resize-none font-mono text-xs sm:text-sm text-cyber-cyan placeholder:text-slate-700 custom-scrollbar"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    disabled={checking}
-                  />
+      {/* Main Interface Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column: Input & Controls */}
+        <div className="lg:col-span-5 space-y-8">
+          <div className="p-8 glass rounded-[2.5rem] border border-white/5 space-y-8">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between px-1">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Card List</label>
+                <div className="flex items-center gap-2">
+                  <div className={`w-1.5 h-1.5 rounded-full ${checking ? 'bg-cyber-cyan animate-pulse' : 'bg-slate-700'}`} />
+                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{checking ? 'Active' : 'Standby'}</span>
                 </div>
               </div>
+              <textarea
+                placeholder="PASTE CARDS (NUMBER|MM|YYYY|CVV)"
+                className="w-full h-[300px] p-6 bg-dark-800 border border-white/5 rounded-2xl font-mono text-xs text-cyber-cyan placeholder:text-slate-700 focus:border-cyber-cyan focus:ring-4 focus:ring-cyber-cyan/10 outline-none transition-all resize-none custom-scrollbar"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                disabled={checking}
+              />
+            </div>
 
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-cyber-purple to-cyber-cyan rounded-[2.5rem] blur opacity-5 transition duration-1000" />
-                <div className="relative h-[300px] bg-dark-950/80 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-8 overflow-hidden">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                      <Activity className="w-4 h-4" /> Live Scan Logs
-                    </div>
-                    {checking && (
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-cyber-cyan rounded-full animate-pulse" />
-                        <span className="text-[8px] font-black text-cyber-cyan uppercase tracking-widest">Active</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="h-[200px] overflow-y-auto custom-scrollbar font-mono text-[10px] space-y-2">
-                    {scanLogs.length === 0 ? (
-                      <div className="h-full flex items-center justify-center text-slate-800 italic">
-                        System idle. Awaiting input...
-                      </div>
-                    ) : (
-                      scanLogs.map((log, i) => (
-                        <motion.div 
-                          key={i} 
-                          initial={{ opacity: 0, x: -10 }} 
-                          animate={{ opacity: 1, x: 0 }}
-                          className={`${log.startsWith('+') ? 'text-cyber-green' : log.startsWith('-') ? 'text-cyber-red' : log.startsWith('!') ? 'text-cyber-amber' : 'text-slate-400'}`}
-                        >
-                          {log}
-                        </motion.div>
-                      ))
-                    )}
-                  </div>
-                </div>
+            <div className="space-y-4">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Verification Gate</label>
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                {(['AUTH', 'CCN', 'CVV', 'PAYATE', 'ALL'] as const).map((g) => (
+                  <button
+                    key={g}
+                    onClick={() => setGate(g)}
+                    className={`py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${
+                      gate === g 
+                        ? 'bg-cyber-cyan text-dark-950 border-cyber-cyan shadow-lg shadow-cyber-cyan/20' 
+                        : 'bg-white/5 text-slate-500 border-white/5 hover:border-cyber-cyan/30'
+                    }`}
+                  >
+                    {g}
+                  </button>
+                ))}
               </div>
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-5">
+
+            <div className="flex gap-4">
               {!checking ? (
                 <button
                   onClick={onProcess}
                   disabled={!input.trim()}
-                  className="flex-[2] py-6 bg-cyber-cyan hover:bg-cyber-cyan/80 text-dark-950 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-4 transition-all disabled:opacity-50 shadow-lg shadow-cyber-cyan/20 active:scale-95"
+                  className="flex-1 py-5 bg-cyber-cyan hover:bg-cyber-cyan/90 text-dark-950 rounded-2xl font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-4 transition-all shadow-lg shadow-cyber-cyan/20 active:scale-[0.98] disabled:opacity-50"
                 >
-                  <Play className="w-6 h-6" />
-                  Execute Deep Scan
+                  <Play className="w-5 h-5 fill-dark-950" />
+                  Start Verification
                 </button>
               ) : (
                 <button
                   onClick={onStop}
-                  className="flex-[2] py-6 bg-cyber-red hover:bg-cyber-red/80 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-4 transition-all shadow-lg shadow-cyber-red/20 active:scale-95"
+                  className="flex-1 py-5 bg-cyber-red hover:bg-cyber-red/90 text-white rounded-2xl font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-4 transition-all shadow-lg shadow-cyber-red/20 active:scale-[0.98]"
                 >
-                  <RefreshCw className="w-6 h-6 animate-spin" />
-                  Stop Analysis
+                  <RefreshCw className="w-5 h-5 animate-spin" />
+                  Stop Verification
                 </button>
               )}
               <button
                 onClick={clearAll}
-                className="flex-1 py-6 bg-dark-900 hover:bg-dark-800 text-slate-500 hover:text-white rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] border border-white/5 transition-all active:scale-95"
+                className="p-5 bg-white/5 hover:bg-white/10 text-slate-500 hover:text-white rounded-2xl transition-all border border-white/5"
               >
-                <Trash2 className="w-6 h-6" />
+                <Trash2 className="w-5 h-5" />
               </button>
             </div>
           </div>
 
-          {/* Results Section */}
-          <div className="xl:col-span-6 space-y-6">
+          {/* Scan Logs */}
+          <div className="p-8 glass rounded-[2.5rem] border border-white/5">
+            <div className="flex items-center gap-3 mb-6 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+              <Terminal className="w-4 h-4" /> Verification Logs
+            </div>
+            <div className="h-[200px] overflow-y-auto custom-scrollbar font-mono text-[10px] space-y-2">
+              {scanLogs.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-slate-800 italic">
+                  <Activity className="w-8 h-8 mb-2 opacity-10" />
+                  <p className="opacity-30 uppercase tracking-widest">Awaiting Verification</p>
+                </div>
+              ) : (
+                scanLogs.map((log, i) => (
+                  <motion.div 
+                    key={i} 
+                    initial={{ opacity: 0, x: -10 }} 
+                    animate={{ opacity: 1, x: 0 }}
+                    className={`${log.startsWith('+') ? 'text-cyber-green' : log.startsWith('-') ? 'text-cyber-red' : log.startsWith('!') ? 'text-cyber-amber' : 'text-slate-400'}`}
+                  >
+                    <span className="opacity-30 mr-2">[{new Date().toLocaleTimeString([], { hour12: false })}]</span>
+                    {log}
+                  </motion.div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Results Feed */}
+        <div className="lg:col-span-7 space-y-8">
+          {/* Live Section */}
+          <div className="space-y-6">
             <div className="flex items-center justify-between px-4">
               <div className="flex items-center gap-3">
-                <div className="w-3 h-3 bg-cyber-green rounded-full animate-pulse shadow-[0_0_15px_rgba(0,255,157,1)]" />
-                <h3 className="text-base font-black text-cyber-green uppercase tracking-[0.3em]">Live Approved</h3>
+                <div className="w-2 h-2 bg-cyber-green rounded-full shadow-[0_0_10px_rgba(0,255,157,1)]" />
+                <h3 className="text-[10px] font-black text-cyber-green uppercase tracking-[0.3em]">Live Cards</h3>
               </div>
               {liveCards.length > 0 && (
                 <button 
                   onClick={copyLive}
-                  className="flex items-center gap-2 text-[10px] font-black text-dark-950 bg-cyber-green px-6 py-3 rounded-full hover:bg-cyber-green/80 transition-all shadow-lg shadow-cyber-green/20 active:scale-95"
+                  className="flex items-center gap-2 text-[10px] font-black text-cyber-green bg-cyber-green/10 px-4 py-2 rounded-full hover:bg-cyber-green/20 transition-all border border-cyber-green/20"
                 >
-                  <Copy className="w-4 h-4" /> Copy All Live Cards ({liveCards.length})
+                  <Copy className="w-3 h-3" /> Copy Live Cards ({liveCards.length})
                 </button>
               )}
             </div>
-            <div className="h-[550px] bg-dark-900/60 border-2 border-cyber-green/20 rounded-[3rem] p-8 overflow-y-auto custom-scrollbar space-y-5 shadow-[inset_0_0_30px_rgba(0,255,157,0.05)]">
-              <AnimatePresence initial={false}>
+            <div className="h-[450px] glass border border-cyber-green/20 rounded-[2.5rem] p-8 overflow-y-auto custom-scrollbar space-y-4">
+              <AnimatePresence mode="popLayout">
                 {liveCards.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-slate-800">
-                    <ShieldCheck className="w-20 h-20 mb-6 opacity-5" />
-                    <p className="text-[10px] font-black uppercase tracking-widest opacity-20">Awaiting Live Cards...</p>
+                    <ShieldCheck className="w-16 h-16 mb-4 opacity-5" />
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-20">No Live Assets Detected</p>
                   </div>
                 ) : (
                   liveCards.map((res, i) => (
                     <motion.div
                       key={i}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="p-6 bg-cyber-green/5 border border-cyber-green/20 rounded-[1.5rem] group hover:bg-cyber-green/10 transition-all shadow-lg relative overflow-hidden"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-6 bg-white/5 border border-white/5 hover:border-cyber-green/40 rounded-2xl group transition-all relative overflow-hidden hover:shadow-[0_0_30px_rgba(0,255,157,0.1)]"
                     >
-                      {res.isFreeTrialEligible && (
-                        <div className="absolute top-0 right-0 bg-cyber-green text-dark-950 text-[8px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest">
-                          Free Trial Eligible
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between mb-4">
+                      {/* Hover Glow */}
+                      <div className="absolute inset-0 bg-cyber-green/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                      
+                      <div className="flex items-center justify-between mb-4 relative z-10">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-cyber-green rounded-xl flex items-center justify-center text-dark-950 shadow-lg shadow-cyber-green/20">
+                          <div className="w-10 h-10 bg-cyber-green/10 rounded-xl flex items-center justify-center text-cyber-green border border-cyber-green/20 group-hover:border-cyber-green/40 transition-colors shadow-[0_0_15px_rgba(0,255,157,0.1)]">
                             <Check className="w-5 h-5" />
                           </div>
-                          <span className="font-mono text-sm font-black text-cyber-green tracking-widest">{res.raw}</span>
+                          <span className="font-mono text-sm font-black text-white tracking-widest group-hover:text-cyber-green transition-colors">{res.raw}</span>
                         </div>
                         <button 
                           onClick={() => navigator.clipboard.writeText(res.raw)}
-                          className="p-3 bg-dark-950 text-slate-500 hover:text-cyber-green rounded-xl transition-all border border-white/5"
+                          className="p-2.5 bg-dark-950 text-slate-500 hover:text-cyber-green rounded-xl transition-all border border-white/5 hover:border-cyber-green/30 opacity-0 group-hover:opacity-100"
                         >
                           <Copy className="w-4 h-4" />
                         </button>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex flex-wrap gap-2">
-                          <span className="px-3 py-1 bg-cyber-green/10 rounded-md text-[9px] font-black text-cyber-green uppercase tracking-widest border border-cyber-green/20">{res.brand}</span>
-                          <span className="px-3 py-1 bg-cyber-green/10 rounded-md text-[9px] font-black text-cyber-green uppercase tracking-widest border border-cyber-green/20">{res.bank}</span>
-                          <span className="px-3 py-1 bg-cyber-green/10 rounded-md text-[9px] font-black text-cyber-green uppercase tracking-widest border border-cyber-green/20">{res.country}</span>
-                        </div>
-                        <span className="text-[10px] font-black text-cyber-green italic">{res.message}</span>
-                      </div>
-                      
-                      {res.eligibleServices && res.eligibleServices.length > 0 && (
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {res.eligibleServices.map((service, idx) => (
-                            <span key={idx} className="px-2 py-1 bg-dark-950/50 rounded-lg text-[8px] font-black text-slate-400 uppercase tracking-widest border border-white/5 flex items-center gap-1.5">
-                              <div className="w-1 h-1 bg-cyber-green rounded-full" />
-                              {service}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="mt-4 p-4 bg-cyber-red/10 border border-cyber-red/30 rounded-xl">
-                        <p className="text-[10px] text-cyber-red font-black uppercase tracking-widest mb-1 flex items-center gap-2">
-                          <AlertCircle className="w-3 h-3" /> Important: Simulation Only
-                        </p>
-                        <p className="text-[10px] text-slate-400 leading-tight">
-                          This card passed our <span className="text-cyber-cyan font-bold">{gate}</span> simulation. However, real websites (like the one in your screenshot) verify the CVV directly with the bank. Since this is a simulated card, the CVV will <span className="text-cyber-red font-bold underline">ALWAYS</span> show as invalid on real merchants.
-                        </p>
+                      <div className="flex flex-wrap gap-2 relative z-10">
+                        <span className="px-3 py-1 bg-white/5 rounded-lg text-[8px] font-black text-slate-400 uppercase tracking-widest border border-white/5 group-hover:border-cyber-green/20 transition-colors">{res.brand}</span>
+                        <span className="px-3 py-1 bg-white/5 rounded-lg text-[8px] font-black text-slate-400 uppercase tracking-widest border border-white/5 group-hover:border-cyber-green/20 transition-colors">{res.bank}</span>
+                        <span className="px-3 py-1 bg-white/5 rounded-lg text-[8px] font-black text-slate-400 uppercase tracking-widest border border-white/5 group-hover:border-cyber-green/20 transition-colors">{res.country}</span>
+                        <span className="ml-auto text-[10px] font-black text-cyber-green uppercase tracking-widest drop-shadow-[0_0_8px_rgba(0,255,157,0.5)]">{res.message}</span>
                       </div>
                     </motion.div>
                   ))
@@ -298,38 +265,32 @@ export const CCChecker: React.FC<CCCheckerProps> = ({ state, setState, onProcess
             </div>
           </div>
 
-          <div className="xl:col-span-6 space-y-6">
+          {/* Dead Section */}
+          <div className="space-y-6">
             <div className="flex items-center gap-3 px-4">
-              <div className="w-3 h-3 bg-cyber-red rounded-full shadow-[0_0_15px_rgba(255,51,102,1)]" />
-              <h3 className="text-base font-black text-cyber-red uppercase tracking-[0.3em]">Declined / Dead</h3>
+              <div className="w-2 h-2 bg-cyber-red rounded-full" />
+              <h3 className="text-[10px] font-black text-cyber-red uppercase tracking-[0.3em]">Dead Cards</h3>
             </div>
-            <div className="h-[550px] bg-dark-900/60 border-2 border-cyber-red/20 rounded-[3rem] p-8 overflow-y-auto custom-scrollbar space-y-5 shadow-[inset_0_0_30px_rgba(255,51,102,0.05)]">
-              <AnimatePresence initial={false}>
+            <div className="h-[300px] glass border border-cyber-red/20 rounded-[2.5rem] p-8 overflow-y-auto custom-scrollbar space-y-4">
+              <AnimatePresence mode="popLayout">
                 {dieCards.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-slate-800">
-                    <AlertCircle className="w-20 h-20 mb-6 opacity-5" />
-                    <p className="text-[10px] font-black uppercase tracking-widest opacity-20">No Dead Cards Detected</p>
+                    <XCircle className="w-16 h-16 mb-4 opacity-5" />
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-20">No Dead Nodes</p>
                   </div>
                 ) : (
                   dieCards.map((res, i) => (
                     <motion.div
                       key={i}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="p-6 bg-cyber-red/5 border border-cyber-red/20 rounded-[1.5rem] group hover:bg-cyber-red/10 transition-all"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="p-4 bg-white/5 border border-white/5 rounded-xl flex items-center justify-between"
                     >
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-cyber-red/20 rounded-xl flex items-center justify-center text-cyber-red">
-                            <XCircle className="w-5 h-5" />
-                          </div>
-                          <span className="font-mono text-sm font-bold text-slate-500 tracking-widest">{res.raw}</span>
-                        </div>
+                      <div className="flex items-center gap-4">
+                        <XCircle className="w-4 h-4 text-cyber-red/40" />
+                        <span className="font-mono text-xs font-bold text-slate-500 tracking-widest">{res.raw}</span>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="px-3 py-1 bg-cyber-red/10 rounded-md text-[9px] font-black text-cyber-red/60 uppercase tracking-widest border border-cyber-red/20">{res.brand || 'Unknown'}</span>
-                        <span className="text-[10px] font-black text-cyber-red/60 italic">{res.message}</span>
-                      </div>
+                      <span className="text-[9px] font-black text-cyber-red/40 uppercase tracking-widest">{res.message}</span>
                     </motion.div>
                   ))
                 )}
@@ -337,25 +298,28 @@ export const CCChecker: React.FC<CCCheckerProps> = ({ state, setState, onProcess
             </div>
           </div>
         </div>
-
-        {/* Current Scan Overlay */}
-        <AnimatePresence>
-          {checking && currentChecking && (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-dark-900/90 backdrop-blur-2xl border border-cyber-cyan/30 px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4"
-            >
-              <RefreshCw className="w-5 h-5 text-cyber-cyan animate-spin" />
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black text-cyber-cyan uppercase tracking-widest">Scanning Network</span>
-                <span className="text-xs font-mono text-slate-300 truncate max-w-[200px]">{currentChecking}</span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
+
+      {/* Scanning Overlay */}
+      <AnimatePresence>
+        {checking && currentChecking && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-12 left-1/2 -translate-x-1/2 z-50 glass border border-cyber-cyan/30 px-8 py-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center gap-6"
+          >
+            <div className="relative">
+              <div className="absolute inset-0 bg-cyber-cyan rounded-full blur-md opacity-20 animate-pulse" />
+              <RefreshCw className="w-6 h-6 text-cyber-cyan animate-spin relative z-10" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black text-cyber-cyan uppercase tracking-[0.2em]">Verifying Card...</span>
+              <span className="text-xs font-mono text-white truncate max-w-[250px]">{currentChecking}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

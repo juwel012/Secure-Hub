@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   Mail, 
   Copy, 
@@ -25,7 +25,8 @@ import {
   CreditCard,
   MapPin,
   LayoutGrid,
-  Timer
+  Timer,
+  AlertTriangle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { mailService, generateRandomString } from './services/mailService';
@@ -110,6 +111,51 @@ export default function App() {
     const saved = localStorage.getItem('securehub_active_tab');
     return (saved as any) || 'mail';
   });
+
+  // Lifted Timer State
+  const [timers, setTimers] = useState<any[]>(() => {
+    const saved = localStorage.getItem('securehub_timers');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const ALARM_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
+
+  useEffect(() => {
+    localStorage.setItem('securehub_timers', JSON.stringify(timers));
+  }, [timers]);
+
+  // Global Timer Tick for Sound and Completion
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      let changed = false;
+      
+      const updated = timers.map(t => {
+        if (t.status === 'running' && t.targetTimestamp && now >= t.targetTimestamp) {
+          changed = true;
+          // Play sound globally
+          if (audioRef.current) {
+            audioRef.current.play().catch(() => {});
+          }
+          return { 
+            ...t, 
+            status: 'completed', 
+            targetTimestamp: null, 
+            remainingAtPause: 0,
+            completedAt: now // Track when it finished
+          };
+        }
+        return t;
+      });
+      
+      if (changed) {
+        setTimers(updated);
+      }
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [timers]);
 
   const handleTabChange = (tabId: typeof activeTab) => {
     if (tabId !== 'mail' && !user) {
@@ -1007,10 +1053,10 @@ export default function App() {
               <ShieldCheck className="w-12 h-12 text-dark-950" />
             </div>
             <div className="text-center">
-              <h1 className="text-cyber-cyan font-black tracking-tighter text-4xl uppercase mb-2">SecureHub</h1>
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-1.5 h-1.5 bg-cyber-cyan rounded-full animate-ping" />
-                <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.4em]">Initializing Secure Protocol</p>
+              <h1 className="text-cyber-cyan font-black tracking-tighter text-5xl uppercase mb-2 hover-glitch cursor-default">SecureHub</h1>
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-2 h-2 bg-cyber-cyan rounded-full animate-ping shadow-[0_0_10px_#00f5d4]" />
+                <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.5em]">Neural Protocol v4.0.2</p>
               </div>
             </div>
           </div>
@@ -1020,115 +1066,122 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-dark-950 text-slate-200 font-sans selection:bg-cyber-cyan/30 relative overflow-x-hidden cyber-grid">
-      {/* Background Decorative Elements */}
-      <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-0 overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyber-cyan/5 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyber-purple/5 rounded-full blur-[120px]" />
-        <div className="scanline" />
-      </div>
+    <div className="flex h-screen bg-dark-950 text-white font-sans selection:bg-cyber-cyan/30 relative overflow-hidden">
+      {/* Global Audio Element */}
+      <audio ref={audioRef} src={ALARM_SOUND_URL} preload="auto" />
 
-      {/* Sidebar - Hidden on Mobile */}
-      <div className="hidden lg:flex w-64 h-screen glass fixed left-0 top-0 flex-col z-50">
-        <div className="p-8 border-b border-white/5">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-cyber-cyan to-cyber-blue rounded-xl flex items-center justify-center shadow-lg shadow-cyber-cyan/20">
-              <ShieldCheck className="w-6 h-6 text-dark-950" />
+      {/* Background Elements */}
+      <div className="absolute inset-0 cyber-grid pointer-events-none opacity-50" />
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyber-cyan/50 to-transparent blur-sm" />
+      <div className="scanline" />
+      
+      {/* Floating Glows */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyber-purple/10 rounded-full blur-[120px] animate-pulse pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyber-cyan/10 rounded-full blur-[120px] animate-pulse pointer-events-none" style={{ animationDelay: '2s' }} />
+
+      {/* Sidebar Navigation */}
+      <aside className="hidden lg:flex w-72 glass border-r border-white/5 flex-col z-50 relative">
+        <div className="p-6 lg:p-8 flex items-center gap-4">
+          <div className="relative group">
+            <div className="absolute inset-0 bg-cyber-cyan rounded-xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity" />
+            <div className="relative w-10 h-10 lg:w-12 lg:h-12 bg-dark-900 rounded-xl border border-cyber-cyan/30 flex items-center justify-center">
+              <ShieldCheck className="w-6 h-6 lg:w-7 lg:h-7 text-cyber-cyan animate-pulse" />
             </div>
-            <h1 className="text-xl font-black tracking-tighter bg-gradient-to-r from-cyber-cyan to-cyber-purple bg-clip-text text-transparent">SECUREHUB</h1>
           </div>
-          <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Extreme Suite v4.0</p>
+          <div className="hidden lg:block">
+            <h1 className="text-xl font-black tracking-tighter text-glow-cyan uppercase hover-glitch cursor-default">Secure<span className="text-cyber-purple">Hub</span></h1>
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-cyber-green animate-pulse shadow-[0_0_8px_#00ff88]" />
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">System Status: Secure</span>
+            </div>
+          </div>
         </div>
 
-        <nav className="flex-1 p-6 space-y-2 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scrollbar">
           {[
-            { id: 'mail', name: 'Temp Mail', icon: MailIcon, color: 'cyber-cyan' },
-            { id: 'gmail-gen', name: 'Gmail Gen', icon: Mail, color: 'cyber-purple' },
-            { id: 'cc-gen', name: 'CC Generator', icon: CreditCard, color: 'cyber-amber' },
-            { id: 'cc-check', name: 'CC Checker', icon: ShieldCheck, color: 'cyber-green' },
-            { id: 'proxy-check', name: 'Proxy Check', icon: Globe, color: 'cyber-cyan' },
-            { id: 'qr-gen', name: 'QR Generator', icon: LayoutGrid, color: 'cyber-purple' },
-            { id: 'address-gen', name: 'Address Gen', icon: MapPin, color: 'cyber-pink' },
-            { id: 'timer', name: 'Secure Timer', icon: Timer, color: 'cyber-amber' }
+            { id: 'mail', icon: MailIcon, label: 'Secure Mail', color: 'cyber-cyan' },
+            { id: 'cc-gen', icon: CreditCard, label: 'Identity Architect', color: 'cyber-purple' },
+            { id: 'cc-check', icon: Shield, label: 'Identity Validator', color: 'cyber-pink' },
+            { id: 'gmail-gen', icon: Mail, label: 'Alias Generator', color: 'cyber-blue' },
+            { id: 'address-gen', icon: MapPin, label: 'Virtual Identity', color: 'cyber-amber' },
+            { id: 'proxy-check', icon: Globe, label: 'Threat Intelligence', color: 'cyber-green' },
+            { id: 'qr-gen', icon: LayoutGrid, label: 'Secure Matrix', color: 'cyber-purple' },
+            { id: 'timer', icon: Timer, label: 'System Timer', color: 'cyber-cyan' },
           ].map((item) => (
             <button
               key={item.id}
               onClick={() => handleTabChange(item.id as any)}
-              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all group relative overflow-hidden ${
+              className={`w-full group relative flex items-center gap-4 p-3 lg:p-4 rounded-2xl transition-all duration-300 ${
                 activeTab === item.id 
-                ? 'bg-white/5 text-white' 
-                : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                  ? `bg-white/5 text-white border border-white/10 shadow-[0_0_20px_rgba(0,0,0,0.3)]` 
+                  : 'text-slate-500 hover:text-white hover:bg-white/5 border border-transparent'
               }`}
             >
               {activeTab === item.id && (
                 <motion.div 
-                  layoutId="active-nav"
-                  className="absolute left-0 top-0 w-1 h-full bg-cyber-cyan"
+                  layoutId="activeTab"
+                  className="absolute inset-0 rounded-2xl border-2 border-cyber-cyan/50 pointer-events-none"
+                  initial={false}
+                  transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                 />
               )}
-              <item.icon className={`w-5 h-5 transition-colors ${
-                activeTab === item.id ? `text-${item.color}` : 'group-hover:text-slate-300'
-              }`} />
-              <span className="font-bold text-sm tracking-tight flex-1">{item.name}</span>
-              {item.id === 'cc-check' && ccCheckState.checking && (
-                <div className="flex items-center gap-1">
-                  <div className="w-1.5 h-1.5 bg-cyber-green rounded-full animate-pulse" />
-                  <span className="text-[8px] font-black text-cyber-green uppercase">Running</span>
-                </div>
+              <item.icon className={`w-6 h-6 shrink-0 transition-transform group-hover:scale-110`} />
+              <span className="hidden lg:block text-xs font-black uppercase tracking-widest">{item.label}</span>
+              {activeTab === item.id && (
+                <div className="hidden lg:block absolute right-4 w-1.5 h-1.5 rounded-full bg-cyber-cyan shadow-[0_0_10px_rgba(0,245,212,0.5)]" />
               )}
             </button>
           ))}
         </nav>
 
-        <div className="p-6 border-t border-white/5">
+        <div className="p-4 lg:p-6 border-t border-white/5 space-y-4">
           {user ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 px-2">
-                <div className="w-10 h-10 bg-dark-800 rounded-full flex items-center justify-center border border-white/10">
-                  <User className="w-5 h-5 text-cyber-cyan" />
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
+                <div className="w-8 h-8 rounded-full bg-cyber-purple/20 flex items-center justify-center border border-cyber-purple/30">
+                  <User className="w-4 h-4 text-cyber-purple" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Operator</p>
-                  <p className="text-xs font-bold text-slate-300 truncate">{user.email}</p>
+                <div className="hidden lg:block min-w-0">
+                  <p className="text-[10px] font-black text-white truncate">{user.email}</p>
+                  <p className="text-[8px] font-bold text-cyber-purple uppercase tracking-widest">Authorized User</p>
                 </div>
               </div>
               <button 
-                onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-3 py-3 bg-dark-800 hover:bg-cyber-red/10 text-slate-400 hover:text-cyber-red rounded-xl transition-all border border-white/5 hover:border-cyber-red/20 text-xs font-bold"
+                onClick={() => signOut(auth)}
+                className="w-full p-3 lg:p-4 bg-cyber-red/10 hover:bg-cyber-red/20 text-cyber-red rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 transition-all border border-cyber-red/20"
               >
-                <LogOut className="w-4 h-4" /> Sign Out
+                <LogOut className="w-4 h-4" />
+                <span className="hidden lg:block">Sign Out</span>
               </button>
             </div>
           ) : (
             <button 
               onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
-              className="w-full py-4 btn-primary rounded-xl text-xs uppercase tracking-widest flex items-center justify-center gap-3"
+              className="w-full p-3 lg:p-4 bg-cyber-cyan text-dark-950 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 transition-all hover:shadow-[0_0_20px_rgba(0,245,212,0.3)] active:scale-95"
             >
-              <LogIn className="w-4 h-4" /> Access Suite
+              <LogIn className="w-4 h-4" />
+              <span className="hidden lg:block">Initialize Auth</span>
             </button>
           )}
         </div>
-      </div>
+      </aside>
 
       {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 w-full glass z-50 border-t border-white/5 px-2 py-3 flex justify-around items-center">
+      <div className="lg:hidden fixed bottom-0 left-0 w-full glass z-50 border-t border-white/5 px-2 py-3 flex justify-around items-center backdrop-blur-xl">
         {[
           { id: 'mail', icon: MailIcon, color: 'cyber-cyan' },
-          { id: 'gmail-gen', icon: Mail, color: 'cyber-purple' },
-          { id: 'cc-gen', icon: CreditCard, color: 'cyber-amber' },
-          { id: 'cc-check', icon: ShieldCheck, color: 'cyber-green' },
-          { id: 'proxy-check', icon: Globe, color: 'cyber-cyan' },
+          { id: 'cc-gen', icon: CreditCard, color: 'cyber-purple' },
+          { id: 'cc-check', icon: Shield, color: 'cyber-pink' },
+          { id: 'timer', icon: Timer, color: 'cyber-cyan' },
           { id: 'qr-gen', icon: LayoutGrid, color: 'cyber-purple' },
-          { id: 'address-gen', icon: MapPin, color: 'cyber-pink' },
-          { id: 'timer', icon: Timer, color: 'cyber-amber' }
         ].map((item) => (
           <button
             key={item.id}
             onClick={() => handleTabChange(item.id as any)}
             className={`p-3 rounded-2xl transition-all relative ${
               activeTab === item.id 
-              ? `bg-${item.color}/10 text-${item.color}` 
-              : 'text-slate-500'
+              ? `text-${item.color} bg-${item.color}/10` 
+              : 'text-slate-500 hover:text-slate-300'
             }`}
           >
             <item.icon className="w-6 h-6" />
@@ -1138,14 +1191,11 @@ export default function App() {
                 className={`absolute inset-0 bg-${item.color}/10 rounded-2xl -z-10`}
               />
             )}
-            {item.id === 'cc-check' && ccCheckState.checking && (
-              <div className="absolute top-1 right-1 w-2 h-2 bg-cyber-green rounded-full animate-ping" />
-            )}
           </button>
         ))}
         <button
           onClick={() => {
-            if (user) handleLogout();
+            if (user) signOut(auth);
             else { setAuthMode('login'); setShowAuthModal(true); }
           }}
           className={`p-3 rounded-2xl transition-all relative ${user ? 'text-cyber-cyan' : 'text-slate-500'}`}
@@ -1155,363 +1205,378 @@ export default function App() {
       </div>
 
       {/* Main Content */}
-      <main className="lg:ml-64 min-h-screen p-4 sm:p-10 pb-24 lg:pb-10 relative z-10">
-        <div className="max-w-5xl mx-auto">
-        {activeTab === 'mail' && (
+      <main className="flex-1 flex flex-col min-w-0 relative z-10 overflow-hidden">
+        <header className="h-20 lg:h-24 glass border-b border-white/5 px-6 lg:px-10 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-4">
+            <div className="w-1 h-8 bg-cyber-cyan rounded-full shadow-[0_0_15px_rgba(0,245,212,0.8)]" />
+            <div>
+              <h2 className="text-lg lg:text-xl font-black uppercase tracking-tighter hover-glitch cursor-default">
+                {activeTab === 'mail' && 'Secure Mail Terminal'}
+                {activeTab === 'cc-gen' && 'Identity Architect'}
+                {activeTab === 'cc-check' && 'Identity Validator'}
+                {activeTab === 'gmail-gen' && 'Alias Generator'}
+                {activeTab === 'address-gen' && 'Virtual Identity'}
+                {activeTab === 'proxy-check' && 'Threat Intelligence Terminal'}
+                {activeTab === 'qr-gen' && 'Secure Matrix Generator'}
+                {activeTab === 'timer' && 'System Timer'}
+              </h2>
+              <p className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em]">Accessing Secure Protocol v4.0.2</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-6 px-6 py-3 bg-white/5 rounded-2xl border border-white/5">
+              <div className="text-right">
+                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">System Time</p>
+                <p className="text-xs font-mono font-bold text-cyber-cyan">{new Date().toLocaleTimeString()}</p>
+              </div>
+              <div className="w-px h-6 bg-white/10" />
+              <div className="text-right">
+                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Latency</p>
+                <p className="text-xs font-mono font-bold text-cyber-green">14ms</p>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-10 pb-32 lg:pb-10">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 20, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.98 }}
+              transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+              className="max-w-[1600px] mx-auto"
+            >
+              {activeTab === 'mail' && (
           error ? (
             <motion.div 
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-cyber-red/10 border border-cyber-red/20 text-cyber-red p-6 rounded-3xl mb-10 flex items-center justify-between shadow-lg shadow-cyber-red/5"
+              className="bg-cyber-red/10 border border-cyber-red/20 text-cyber-red p-8 rounded-[2.5rem] mb-10 flex items-center justify-between glass"
             >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-cyber-red/20 rounded-xl flex items-center justify-center">
-                  <X className="w-5 h-5" />
+              <div className="flex items-center gap-6">
+                <div className="w-14 h-14 bg-cyber-red/20 rounded-2xl flex items-center justify-center border border-cyber-red/30">
+                  <AlertTriangle className="w-7 h-7" />
                 </div>
                 <div>
-                  <p className="font-black uppercase tracking-widest text-[10px] opacity-50">System Error</p>
-                  <p className="font-bold">{error}</p>
+                  <p className="font-black uppercase tracking-[0.3em] text-[10px] text-cyber-red/60 mb-1">System Fault Detected</p>
+                  <p className="text-lg font-bold text-white">{error}</p>
                 </div>
               </div>
-              <button onClick={() => initAccounts()} className="px-6 py-3 bg-dark-800 border border-cyber-red/30 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-dark-700 transition-all">Retry Connection</button>
+              <button 
+                onClick={() => initAccounts()} 
+                className="px-8 py-4 bg-white/5 border border-cyber-red/30 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-cyber-red/10 transition-all active:scale-95"
+              >
+                Retry Protocol
+              </button>
             </motion.div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 animate-slide-up">
-              {/* Left Column: Addresses */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+              {/* Left Column: Identities */}
               <div className="lg:col-span-4 space-y-8">
-              <section className="glass rounded-[1.5rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-2xl shadow-black/50">
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Active Identities</h2>
-                  <div className="flex items-center gap-2">
-                    {accounts.some(a => a.isExpired) && (
-                      <button 
-                        onClick={() => clearExpiredAccounts()}
-                        className="flex items-center gap-2 px-3 py-2 bg-cyber-red/10 hover:bg-cyber-red/20 text-cyber-red rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-cyber-red/20 active:scale-95"
-                        title="Clear Expired"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    )}
-                    <button 
-                      onClick={() => addNewAccount()}
-                      disabled={creatingAccount}
-                      className="flex items-center gap-2 px-4 py-2 bg-cyber-cyan/10 hover:bg-cyber-cyan/20 text-cyber-cyan rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-cyber-cyan/20 active:scale-95 hover-glitch disabled:opacity-50"
-                    >
-                      {creatingAccount ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
-                      {creatingAccount ? 'Synthesizing...' : 'New Identity'}
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <AnimatePresence mode="popLayout">
-                    {[...accounts]
-                      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                      .map((acc, index) => (
-                      <motion.div 
-                        layout
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        key={acc.id} 
-                        className={`group relative border rounded-3xl p-5 transition-all cursor-pointer active:scale-[0.98] ${
-                          acc.isExpired 
-                            ? "bg-cyber-red/5 border-cyber-red/20 hover:border-cyber-red/40 grayscale-[0.5]" 
-                            : "bg-dark-900/50 hover:bg-dark-800 border-white/5 hover:border-cyber-cyan/30"
-                        }`}
-                        onClick={() => handleCopy(acc.address)}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${acc.isExpired ? "bg-cyber-red/10" : "bg-cyber-cyan/10"}`}>
-                              {acc.isExpired ? <X className="w-3.5 h-3.5 text-cyber-red" /> : <ShieldCheck className="w-3.5 h-3.5 text-cyber-cyan" />}
-                            </div>
-                            <span className={`text-[10px] font-black uppercase tracking-widest ${acc.isExpired ? "text-cyber-red" : "text-cyber-cyan"}`}>
-                              Identity {accounts.length - index}
-                            </span>
-                            {acc.isExpired && (
-                              <span className="text-[9px] font-black bg-cyber-red text-white px-2 py-0.5 rounded-full uppercase tracking-tighter shadow-lg shadow-cyber-red/20">
-                                Expired
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                            <div className="p-2 bg-dark-950 rounded-xl border border-white/10">
-                              {copiedAddress === acc.address ? <Check className="w-3.5 h-3.5 text-cyber-green" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
-                            </div>
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(acc.id); }}
-                              className="p-2 bg-dark-950 hover:bg-cyber-red/10 rounded-xl border border-white/10 hover:border-cyber-red/30 transition-all text-slate-500 hover:text-cyber-red"
-                              title="Remove"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                        <div className="text-sm font-mono font-medium break-all text-slate-300 pr-10">
-                          {acc.address}
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
-                
-                <div className="mt-10 pt-8 border-t border-white/5 grid grid-cols-2 gap-6">
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Privacy</p>
-                    <p className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                      <Zap className="w-3 h-3 text-cyber-amber fill-cyber-amber" />
-                      Instant
-                    </p>
-                  </div>
-                  <div className="space-y-1 text-right">
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Encryption</p>
-                    <p className="text-xs font-bold text-slate-300 flex items-center gap-1.5 justify-end">
-                      <ShieldCheck className="w-3 h-3 text-cyber-cyan" />
-                      AES-256
-                    </p>
-                  </div>
-                </div>
-              </section>
-
-              <section className="bg-gradient-to-br from-cyber-purple/20 to-cyber-blue/20 rounded-[1.5rem] sm:rounded-[2.5rem] p-6 sm:p-8 border border-white/10 text-white relative overflow-hidden shadow-2xl shadow-cyber-purple/5">
-                <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-cyber-purple/20 rounded-full blur-3xl" />
-                <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-cyber-blue/20 rounded-full blur-3xl" />
-                
-                <h3 className="font-black text-lg mb-4 flex items-center gap-3">
-                  <div className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md">
-                    <Inbox className="w-4 h-4 text-cyber-purple" />
-                  </div>
-                  Pro Features
-                </h3>
-                <ul className="space-y-4">
-                  {[
-                    'Multi-address support',
-                    'Unified global inbox',
-                    'Real-time auto-refresh',
-                    'Domain auto-rotation'
-                  ].map((feature, i) => (
-                    <li key={i} className="flex items-center gap-3 text-sm font-medium text-slate-300">
-                      <div className="w-1.5 h-1.5 bg-cyber-purple rounded-full" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            </div>
-
-            {/* Right Column: Unified Inbox */}
-            <div className="lg:col-span-8">
-              <div className="glass rounded-[1.5rem] sm:rounded-[2.5rem] shadow-2xl shadow-black/50 overflow-hidden min-h-[500px] sm:min-h-[650px] flex flex-col">
-                <div className="p-4 sm:p-8 border-b border-white/5 flex flex-col sm:flex-row items-center justify-between bg-dark-900/50 backdrop-blur-md sticky top-0 z-30 gap-4">
-                  <div className="flex items-center gap-3 sm:gap-5 w-full sm:w-auto">
-                    <div className="w-10 h-10 sm:w-14 sm:h-14 bg-dark-800 rounded-xl sm:rounded-[1.25rem] flex items-center justify-center border border-white/10 shadow-lg">
-                      <Inbox className="w-5 h-5 sm:w-7 sm:h-7 text-cyber-cyan" />
-                    </div>
+                <div className="p-8 glass rounded-[2.5rem] border border-white/5 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-cyber-cyan/5 rounded-full blur-[40px] -mr-16 -mt-16" />
+                  <div className="flex items-center justify-between mb-10">
                     <div>
-                      <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">Unified Inbox</h2>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[8px] sm:text-[10px] font-black text-cyber-cyan bg-cyber-cyan/10 px-2 py-0.5 rounded-full uppercase tracking-wider border border-cyber-cyan/20">
-                          {messages.length} Messages
-                        </span>
-                        <span className="text-[8px] sm:text-[10px] font-black text-slate-500 uppercase tracking-wider">
-                          Across {accounts.length} Identities
-                        </span>
-                      </div>
+                      <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-1">Neural Cache</h2>
+                      <h3 className="text-xl font-black text-white tracking-tighter uppercase">Active Identities</h3>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {accounts.some(a => a.isExpired) && (
+                        <button 
+                          onClick={() => clearExpiredAccounts()}
+                          className="p-3 bg-cyber-red/10 hover:bg-cyber-red/20 text-cyber-red rounded-xl border border-cyber-red/20 transition-all"
+                          title="Purge Expired"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => addNewAccount()}
+                        disabled={creatingAccount}
+                        className="p-3 bg-cyber-cyan text-dark-950 rounded-xl transition-all shadow-lg shadow-cyber-cyan/20 disabled:opacity-50 active:scale-95"
+                        title="Synthesize New Identity"
+                      >
+                        {creatingAccount ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                    {messages.length > 0 && (
-                      <button 
-                        onClick={() => setShowClearInboxConfirm(true)}
-                        className="p-3 hover:bg-cyber-red/10 rounded-2xl transition-all text-slate-500 hover:text-cyber-red group"
-                        title="Clear all messages"
-                      >
-                        <Trash2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                      </button>
-                    )}
-                    <button 
-                      onClick={() => setShowDeleteAllConfirm(true)}
-                      className="p-3 hover:bg-white/5 rounded-2xl transition-all text-slate-500 hover:text-white"
-                      title="Reset all accounts"
-                    >
-                      <RefreshCw className="w-5 h-5" />
-                    </button>
-                    <div className="w-px h-6 bg-white/5 mx-2" />
-                    <button 
-                      onClick={refreshInbox}
-                      disabled={refreshing}
-                      className="p-3 bg-cyber-cyan hover:bg-cyber-cyan/80 text-dark-950 rounded-2xl transition-all disabled:opacity-50 shadow-lg shadow-cyber-cyan/20"
-                    >
-                      <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
-                    </button>
+                  
+                  <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                    <AnimatePresence mode="popLayout">
+                      {[...accounts]
+                        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                        .map((acc, index) => (
+                        <motion.div 
+                          layout
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          key={acc.id} 
+                          className={`group p-6 rounded-2xl border transition-all cursor-pointer relative overflow-hidden ${
+                            acc.isExpired 
+                              ? "bg-cyber-red/5 border-cyber-red/20 grayscale" 
+                              : "bg-white/5 border-white/5 hover:border-cyber-cyan/30"
+                          }`}
+                          onClick={() => handleCopy(acc.address)}
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-xl flex items-center justify-center border ${acc.isExpired ? "bg-cyber-red/10 border-cyber-red/20" : "bg-cyber-cyan/10 border-cyber-cyan/20"}`}>
+                                {acc.isExpired ? <X className="w-4 h-4 text-cyber-red" /> : <ShieldCheck className="w-4 h-4 text-cyber-cyan" />}
+                              </div>
+                              <div>
+                                <p className={`text-[9px] font-black uppercase tracking-widest ${acc.isExpired ? "text-cyber-red/60" : "text-cyber-cyan/60"}`}>
+                                  ID_NODE_{accounts.length - index}
+                                </p>
+                                {acc.isExpired && (
+                                  <span className="text-[8px] font-black bg-cyber-red text-white px-2 py-0.5 rounded-md uppercase tracking-tighter">
+                                    EXPIRED
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(acc.id); }}
+                                className="p-2 bg-dark-950 hover:bg-cyber-red/10 rounded-lg border border-white/10 hover:border-cyber-red/30 transition-all text-slate-500 hover:text-cyber-red"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="font-mono text-sm font-bold text-slate-300 break-all pr-8">
+                            {acc.address}
+                          </div>
+                          <div className="absolute top-1/2 right-4 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {copiedAddress === acc.address ? <Check className="w-4 h-4 text-cyber-green" /> : <Copy className="w-4 h-4 text-slate-500" />}
+                          </div>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar">
-                  <AnimatePresence mode="wait">
-                    {messages.length === 0 ? (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="flex flex-col items-center justify-center py-32 text-center px-10"
-                      >
-                        <div className="relative mb-10">
-                          <div className="w-32 h-32 bg-dark-800 rounded-[3rem] flex items-center justify-center rotate-12" />
-                          <div className="absolute inset-0 w-32 h-32 bg-dark-900 rounded-[3rem] flex items-center justify-center -rotate-6 transition-transform hover:rotate-0 duration-500 border border-white/5">
-                            <MailIcon className="w-12 h-12 text-dark-800" />
-                          </div>
-                          <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-dark-800 rounded-2xl shadow-xl flex items-center justify-center border border-white/10">
-                            <Clock className="w-6 h-6 text-cyber-cyan animate-pulse" />
-                          </div>
-                        </div>
-                        <h3 className="text-2xl font-black text-white mb-3 tracking-tight">Your inbox is empty</h3>
-                        <p className="text-slate-500 max-w-sm mx-auto font-medium leading-relaxed">
-                          Waiting for incoming signals. Any email sent to your active addresses will appear here in real-time.
-                        </p>
-                        <button 
-                          onClick={refreshInbox}
-                          className="mt-8 px-8 py-3 bg-dark-800 border border-white/10 hover:border-cyber-cyan/30 rounded-2xl text-sm font-bold text-slate-400 hover:text-cyber-cyan transition-all shadow-sm"
-                        >
-                          Check for updates
-                        </button>
-                      </motion.div>
-                    ) : (
-                      <div className="divide-y divide-white/5">
-                        {messages.map((msg, index) => {
-                          const targetAcc = accounts.find(a => a.id === msg.accountId);
-                          const serialNumber = index + 1;
-                          return (
-                            <motion.div
-                              key={msg.id}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              className={`group p-6 hover:bg-white/5 cursor-pointer transition-all flex items-start gap-6 relative ${!msg.seen ? 'bg-cyber-cyan/5' : ''}`}
-                              onClick={() => selectMessage(msg)}
-                            >
-                              {!msg.seen && (
-                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-cyber-cyan" />
-                              )}
-                              <div className="flex flex-col items-center gap-2 shrink-0">
-                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-lg shadow-sm border ${!msg.seen ? 'bg-cyber-cyan text-dark-950 border-cyber-cyan' : 'bg-dark-800 text-slate-500 border-white/5'}`}>
-                                  {msg.from.name ? msg.from.name[0].toUpperCase() : msg.from.address[0].toUpperCase()}
-                                </div>
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">#{serialNumber}</span>
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className={`text-sm truncate tracking-tight ${!msg.seen ? 'font-black text-white' : 'font-bold text-slate-400'}`}>
-                                    {msg.from.name || msg.from.address}
-                                  </span>
-                                  <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest whitespace-nowrap ml-4">
-                                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                  </span>
-                                </div>
-                                <h4 className={`text-base truncate mb-1.5 tracking-tight ${!msg.seen ? 'font-black text-white' : 'font-bold text-slate-300'}`}>
-                                  {msg.subject || '(No Subject)'}
-                                </h4>
-                                <div className="flex items-center gap-3">
-                                  <p className="text-sm text-slate-500 line-clamp-1 flex-1 font-medium">{msg.intro}</p>
-                                  {targetAcc && (
-                                    <span className="text-[9px] font-black text-cyber-cyan bg-cyber-cyan/10 px-2.5 py-1 rounded-lg uppercase tracking-[0.1em] shrink-0 border border-cyber-cyan/20 max-w-[120px] truncate">
-                                      To: {targetAcc.address}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); deleteMessage(msg.id, msg.accountId); }}
-                                  className="p-2.5 bg-dark-950 hover:bg-cyber-red/10 text-slate-500 hover:text-cyber-red rounded-xl shadow-sm border border-white/10 hover:border-cyber-red/30 transition-all"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                                <div className="p-2.5 bg-dark-950 rounded-xl shadow-sm border border-white/10 flex items-center justify-center">
-                                  <ChevronRight className="w-4 h-4 text-slate-500" />
-                                </div>
-                              </div>
-                            </motion.div>
-                          );
-                        })}
+                <div className="p-8 glass rounded-[2.5rem] border border-white/5 space-y-6">
+                  <div className="flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                    <Shield className="w-4 h-4 text-cyber-cyan" /> Encryption Protocol
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-500 font-bold uppercase tracking-widest">Algorithm</span>
+                      <span className="text-white font-black">RSA-4096</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-500 font-bold uppercase tracking-widest">Handshake</span>
+                      <span className="text-cyber-green font-black">SECURE</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-500 font-bold uppercase tracking-widest">Persistence</span>
+                      <span className="text-cyber-cyan font-black">NEURAL_CACHE</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Unified Inbox */}
+              <div className="lg:col-span-8 flex flex-col">
+                <div className="p-8 glass rounded-[2.5rem] border border-white/5 flex-1 flex flex-col min-h-[700px]">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mb-10">
+                    <div className="flex items-center gap-5">
+                      <div className="w-14 h-14 bg-cyber-cyan/10 rounded-2xl flex items-center justify-center border border-cyber-cyan/20 shadow-[0_0_20px_rgba(0,255,255,0.1)]">
+                        <Inbox className="w-7 h-7 text-cyber-cyan" />
                       </div>
-                    )}
-                  </AnimatePresence>
+                      <div>
+                        <h2 className="text-2xl font-black text-white tracking-tighter uppercase">Unified Feed</h2>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="text-[10px] font-black text-cyber-cyan uppercase tracking-widest">
+                            {messages.length} Signals
+                          </span>
+                          <div className="w-1 h-1 rounded-full bg-slate-700" />
+                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                            {accounts.length} Nodes Active
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {messages.length > 0 && (
+                        <button 
+                          onClick={() => setShowClearInboxConfirm(true)}
+                          className="p-4 bg-white/5 hover:bg-cyber-red/10 text-slate-500 hover:text-cyber-red rounded-2xl border border-white/5 transition-all"
+                          title="Purge Feed"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => setShowDeleteAllConfirm(true)}
+                        className="p-4 bg-white/5 hover:bg-white/10 text-slate-500 hover:text-white rounded-2xl border border-white/5 transition-all"
+                        title="Reset All Nodes"
+                      >
+                        <RefreshCw className="w-5 h-5" />
+                      </button>
+                      <button 
+                        onClick={refreshInbox}
+                        disabled={refreshing}
+                        className="px-8 py-4 bg-cyber-cyan text-dark-950 rounded-2xl font-black text-xs uppercase tracking-[0.3em] flex items-center gap-3 transition-all shadow-lg shadow-cyber-cyan/20 disabled:opacity-50 active:scale-95"
+                      >
+                        {refreshing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                        {refreshing ? 'Syncing...' : 'Sync Feed'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                    <AnimatePresence mode="wait">
+                      {messages.length === 0 ? (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          className="h-full flex flex-col items-center justify-center text-center py-20"
+                        >
+                          <div className="w-24 h-24 bg-white/5 rounded-[2rem] flex items-center justify-center mb-8 border border-white/5">
+                            <MailIcon className="w-10 h-10 text-slate-800" />
+                          </div>
+                          <h3 className="text-xl font-black text-white mb-3 tracking-tighter uppercase">No Signals Detected</h3>
+                          <p className="text-sm text-slate-500 max-w-sm mx-auto font-medium leading-relaxed">
+                            The neural feed is currently silent. Any incoming transmissions to your active nodes will appear here instantly.
+                          </p>
+                        </motion.div>
+                      ) : (
+                        <div className="space-y-4">
+                          {messages.map((msg, index) => {
+                            const targetAcc = accounts.find(a => a.id === msg.accountId);
+                            return (
+                              <motion.div
+                                key={msg.id}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: index * 0.05 }}
+                                className={`group p-6 rounded-2xl border transition-all cursor-pointer relative overflow-hidden flex items-start gap-6 ${
+                                  !msg.seen 
+                                    ? 'bg-cyber-cyan/5 border-cyber-cyan/20' 
+                                    : 'bg-white/5 border-white/5 hover:border-white/10'
+                                }`}
+                                onClick={() => selectMessage(msg)}
+                              >
+                                {!msg.seen && (
+                                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-cyber-cyan shadow-[0_0_15px_rgba(0,255,212,0.5)]" />
+                                )}
+                                <div className="flex flex-col items-center gap-2 shrink-0">
+                                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl border ${
+                                    !msg.seen 
+                                      ? 'bg-cyber-cyan text-dark-950 border-cyber-cyan' 
+                                      : 'bg-dark-800 text-slate-500 border-white/5'
+                                  }`}>
+                                    {msg.from.name ? msg.from.name[0].toUpperCase() : msg.from.address[0].toUpperCase()}
+                                  </div>
+                                  <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">#{index + 1}</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className={`text-sm truncate tracking-tight ${!msg.seen ? 'font-black text-white' : 'font-bold text-slate-400'}`}>
+                                      {msg.from.name || msg.from.address}
+                                    </span>
+                                    <span className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] whitespace-nowrap ml-4">
+                                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </div>
+                                  <h4 className={`text-base truncate mb-2 tracking-tight ${!msg.seen ? 'font-black text-white' : 'font-bold text-slate-300'}`}>
+                                    {msg.subject || '(No Subject)'}
+                                  </h4>
+                                  <div className="flex items-center gap-4">
+                                    <p className="text-sm text-slate-500 line-clamp-1 flex-1 font-medium">{msg.intro}</p>
+                                    {targetAcc && (
+                                      <span className="text-[9px] font-black text-cyber-cyan bg-cyber-cyan/10 px-3 py-1.5 rounded-lg uppercase tracking-widest shrink-0 border border-cyber-cyan/20 max-w-[150px] truncate">
+                                        NODE: {targetAcc.address.split('@')[0]}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); deleteMessage(msg.id, msg.accountId); }}
+                                    className="p-3 bg-dark-950 hover:bg-cyber-red/10 text-slate-500 hover:text-cyber-red rounded-xl border border-white/10 hover:border-cyber-red/30 transition-all"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                  <div className="p-3 bg-dark-950 rounded-xl border border-white/10 flex items-center justify-center">
+                                    <ChevronRight className="w-4 h-4 text-slate-500" />
+                                  </div>
+                                </div>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )
-      )}
+          )
+        )}
 
       {activeTab === 'cc-gen' && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <CCGenerator state={ccGenState} setState={setCcGenState} />
-        </motion.div>
+        <CCGenerator state={ccGenState} setState={setCcGenState} />
       )}
 
       {activeTab === 'cc-check' && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <CCChecker 
-            state={ccCheckState} 
-            setState={setCcCheckState} 
-            onProcess={processCCCheck} 
-            onStop={stopCCCheck}
-          />
-        </motion.div>
+        <CCChecker 
+          state={ccCheckState} 
+          setState={setCcCheckState} 
+          onProcess={processCCCheck} 
+          onStop={stopCCCheck}
+        />
       )}
 
       {activeTab === 'gmail-gen' && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <GmailGenerator state={gmailGenState} setState={setGmailGenState} />
-        </motion.div>
+        <GmailGenerator state={gmailGenState} setState={setGmailGenState} />
       )}
 
       {activeTab === 'address-gen' && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <AddressGenerator state={addressGenState} setState={setAddressGenState} />
-        </motion.div>
+        <AddressGenerator state={addressGenState} setState={setAddressGenState} />
       )}
 
       {activeTab === 'proxy-check' && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <ProxyChecker />
-        </motion.div>
+        <ProxyChecker />
       )}
 
       {activeTab === 'qr-gen' && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <QRCodeGenerator />
-        </motion.div>
+        <QRCodeGenerator />
       )}
 
       {activeTab === 'timer' && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <TimerTool />
-        </motion.div>
+        <TimerTool timers={timers} setTimers={setTimers} />
       )}
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Footer */}
+          <footer className="max-w-5xl mx-auto py-16 border-t border-white/5 mt-20">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-cyber-cyan to-cyber-blue rounded-xl flex items-center justify-center shadow-lg shadow-cyber-cyan/20">
+                  <ShieldCheck className="w-5 h-5 text-dark-950" />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-white tracking-tight">SECUREHUB PRO</p>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Extreme Privacy Suite</p>
+                </div>
+              </div>
+              <div className="text-center md:text-right">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Developed By</p>
+                <p className="text-sm font-black text-cyber-cyan tracking-tight">MD Atikul Islam Juwel</p>
+              </div>
+              <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest text-center md:text-right">© 2026 SECUREHUB. ENTERPRISE GRADE SECURITY.</p>
+            </div>
+          </footer>
         </div>
       </main>
-
-    {/* Footer */}
-    <footer className="max-w-5xl mx-auto py-16 border-t border-white/5 mt-20">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-10">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-cyber-cyan to-cyber-blue rounded-xl flex items-center justify-center shadow-lg shadow-cyber-cyan/20">
-            <ShieldCheck className="w-5 h-5 text-dark-950" />
-          </div>
-          <div>
-            <p className="text-sm font-black text-white tracking-tight">SECUREHUB PRO</p>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Extreme Privacy Suite</p>
-          </div>
-        </div>
-        <div className="text-center md:text-right">
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Developed By</p>
-          <p className="text-sm font-black text-cyber-cyan tracking-tight">MD Atikul Islam Juwel</p>
-        </div>
-        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">© 2026 SECUREHUB. Enterprise Grade Security.</p>
-      </div>
-    </footer>
 
       {/* Clear Inbox Confirmation Modal */}
       <AnimatePresence>
@@ -1528,27 +1593,27 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-md glass rounded-[2.5rem] p-10 shadow-2xl text-center"
+              className="relative w-full max-w-md glass rounded-[3rem] p-12 shadow-2xl text-center border border-white/5"
             >
-              <div className="w-20 h-20 bg-cyber-red/10 rounded-[2rem] flex items-center justify-center mx-auto mb-8 border border-cyber-red/20">
+              <div className="w-24 h-24 bg-cyber-red/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 border border-cyber-red/20 shadow-[0_0_30px_rgba(255,0,110,0.1)]">
                 <Trash2 className="w-10 h-10 text-cyber-red" />
               </div>
-              <h3 className="text-2xl font-black text-white mb-3 tracking-tight">Clear Unified Inbox?</h3>
+              <h3 className="text-2xl font-black text-white mb-3 tracking-tighter uppercase">Purge Neural Feed?</h3>
               <p className="text-slate-500 mb-10 font-medium leading-relaxed">
-                This will permanently delete all messages from all your active addresses. This action cannot be undone.
+                This will permanently delete all transmissions from all active nodes. This action is irreversible.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <button 
                   onClick={() => setShowClearInboxConfirm(false)}
-                  className="flex-1 px-8 py-4 bg-dark-800 hover:bg-dark-700 text-slate-400 rounded-2xl font-black text-sm transition-all active:scale-95"
+                  className="flex-1 px-8 py-4 bg-white/5 hover:bg-white/10 text-slate-400 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 border border-white/5"
                 >
-                  Cancel
+                  Abort
                 </button>
                 <button 
                   onClick={() => { deleteAllMessages(); setShowClearInboxConfirm(false); }}
-                  className="flex-1 px-8 py-4 bg-cyber-red hover:bg-cyber-red/80 text-white rounded-2xl font-black text-sm transition-all shadow-lg shadow-cyber-red/20 active:scale-95"
+                  className="flex-1 px-8 py-4 bg-cyber-red hover:bg-cyber-red/80 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-cyber-red/20 active:scale-95"
                 >
-                  Clear All
+                  Confirm Purge
                 </button>
               </div>
             </motion.div>
@@ -1571,27 +1636,27 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-md glass rounded-[2.5rem] p-10 shadow-2xl text-center"
+              className="relative w-full max-w-md glass rounded-[3rem] p-12 shadow-2xl text-center border border-white/5"
             >
-              <div className="w-20 h-20 bg-cyber-red/10 rounded-[2rem] flex items-center justify-center mx-auto mb-8 border border-cyber-red/20">
+              <div className="w-24 h-24 bg-cyber-red/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 border border-cyber-red/20 shadow-[0_0_30px_rgba(255,0,110,0.1)]">
                 <Trash2 className="w-10 h-10 text-cyber-red" />
               </div>
-              <h3 className="text-2xl font-black text-white mb-3 tracking-tight">Delete Identity?</h3>
+              <h3 className="text-2xl font-black text-white mb-3 tracking-tighter uppercase">Decommission Node?</h3>
               <p className="text-slate-500 mb-10 font-medium leading-relaxed">
-                Are you sure you want to delete <span className="text-cyber-cyan font-bold">{accounts.find(a => a.id === showDeleteConfirm)?.address}</span>? All messages for this address will be removed.
+                Are you sure you want to decommission <span className="text-cyber-cyan font-bold">{accounts.find(a => a.id === showDeleteConfirm)?.address}</span>? All neural transmissions for this node will be purged.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <button 
                   onClick={() => setShowDeleteConfirm(null)}
-                  className="flex-1 px-8 py-4 bg-dark-800 hover:bg-dark-700 text-slate-400 rounded-2xl font-black text-sm transition-all active:scale-95"
+                  className="flex-1 px-8 py-4 bg-white/5 hover:bg-white/10 text-slate-400 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 border border-white/5"
                 >
-                  Cancel
+                  Abort
                 </button>
                 <button 
                   onClick={() => { removeAccount(showDeleteConfirm); setShowDeleteConfirm(null); }}
-                  className="flex-1 px-8 py-4 bg-cyber-red hover:bg-cyber-red/80 text-white rounded-2xl font-black text-sm transition-all shadow-lg shadow-cyber-red/20 active:scale-95"
+                  className="flex-1 px-8 py-4 bg-cyber-red hover:bg-cyber-red/80 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-cyber-red/20 active:scale-95"
                 >
-                  Delete Identity
+                  Confirm Purge
                 </button>
               </div>
             </motion.div>
@@ -1614,27 +1679,27 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-md glass rounded-[2.5rem] p-10 shadow-2xl text-center"
+              className="relative w-full max-w-md glass rounded-[3rem] p-12 shadow-2xl text-center border border-white/5"
             >
-              <div className="w-20 h-20 bg-cyber-amber/10 rounded-[2rem] flex items-center justify-center mx-auto mb-8 border border-cyber-amber/20">
+              <div className="w-24 h-24 bg-cyber-amber/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 border border-cyber-amber/20 shadow-[0_0_30px_rgba(255,191,0,0.1)]">
                 <RefreshCw className="w-10 h-10 text-cyber-amber" />
               </div>
-              <h3 className="text-2xl font-black text-white mb-3 tracking-tight">Reset Everything?</h3>
+              <h3 className="text-2xl font-black text-white mb-3 tracking-tighter uppercase">Neural Reset?</h3>
               <p className="text-slate-500 mb-10 font-medium leading-relaxed">
-                This will permanently delete all your temporary addresses and all messages. You will start with a fresh identity.
+                This will permanently delete all neural nodes and transmissions. You will start with a fresh identity matrix.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <button 
                   onClick={() => setShowDeleteAllConfirm(false)}
-                  className="flex-1 px-8 py-4 bg-dark-800 hover:bg-dark-700 text-slate-400 rounded-2xl font-black text-sm transition-all active:scale-95"
+                  className="flex-1 px-8 py-4 bg-white/5 hover:bg-white/10 text-slate-400 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 border border-white/5"
                 >
-                  Cancel
+                  Abort
                 </button>
                 <button 
                   onClick={() => { deleteAllAccounts(); setShowDeleteAllConfirm(false); }}
-                  className="flex-1 px-8 py-4 bg-white text-dark-950 rounded-2xl font-black text-sm transition-all shadow-lg shadow-white/20 active:scale-95"
+                  className="flex-1 px-8 py-4 bg-cyber-cyan text-dark-950 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-cyber-cyan/20 active:scale-95"
                 >
-                  Reset All
+                  Confirm Reset
                 </button>
               </div>
             </motion.div>
@@ -1650,10 +1715,10 @@ export default function App() {
             initial={{ opacity: 0, y: 50, x: '-50%' }}
             animate={{ opacity: 1, y: 0, x: '-50%' }}
             exit={{ opacity: 0, y: 50, x: '-50%' }}
-            className="fixed bottom-10 left-1/2 z-[70] bg-slate-900 text-white px-8 py-4 rounded-[1.25rem] shadow-2xl flex items-center gap-4 font-bold text-sm border border-slate-800"
+            className="fixed bottom-10 left-1/2 z-[150] glass px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 font-black text-[10px] uppercase tracking-[0.2em] border border-cyber-cyan/20 text-white"
           >
-            <div className="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center">
-              <Check className="w-3.5 h-3.5 text-green-400" />
+            <div className="w-6 h-6 bg-cyber-cyan/10 rounded-lg flex items-center justify-center border border-cyber-cyan/20">
+              <Check className="w-3.5 h-3.5 text-cyber-cyan" />
             </div>
             {toast}
           </motion.div>
@@ -1663,15 +1728,15 @@ export default function App() {
       {/* Loading Message Modal */}
       <AnimatePresence>
         {loadingMessage && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-slate-900/10 backdrop-blur-[2px]" />
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-dark-950/40 backdrop-blur-sm" />
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white px-8 py-5 rounded-2xl shadow-xl flex items-center gap-4 border border-slate-100"
+              className="glass px-10 py-6 rounded-3xl shadow-2xl flex items-center gap-5 border border-cyber-cyan/20"
             >
-              <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />
-              <span className="font-black text-slate-700 text-sm tracking-tight">Fetching Content...</span>
+              <Loader2 className="w-6 h-6 text-cyber-cyan animate-spin" />
+              <span className="font-black text-white text-xs uppercase tracking-[0.3em]">Synchronizing Neural Data...</span>
             </motion.div>
           </div>
         )}
@@ -1686,85 +1751,90 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedMessage(null)}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+              className="absolute inset-0 bg-dark-950/80 backdrop-blur-md"
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-4xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-slate-100"
+              className="relative w-full max-w-5xl glass rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-white/5"
             >
-              <div className="p-8 border-b border-slate-50 flex items-center justify-between shrink-0 bg-white/80 backdrop-blur-md">
-                <div className="flex items-center gap-5">
-                  <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 font-black text-2xl border border-indigo-100">
+              <div className="p-8 border-b border-white/5 flex items-center justify-between shrink-0 bg-dark-900/50 backdrop-blur-md">
+                <div className="flex items-center gap-6">
+                  <div className="w-16 h-16 bg-cyber-cyan/10 rounded-2xl flex items-center justify-center text-cyber-cyan font-black text-2xl border border-cyber-cyan/20 shadow-[0_0_20px_rgba(0,255,255,0.1)]">
                     {selectedMessage.from.name ? selectedMessage.from.name[0].toUpperCase() : selectedMessage.from.address[0].toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="text-lg font-black text-slate-900 tracking-tight">{selectedMessage.from.name || 'Unknown Sender'}</h3>
-                    <p className="text-xs text-slate-400 font-bold tracking-wider">{selectedMessage.from.address}</p>
+                    <h3 className="text-xl font-black text-white tracking-tighter uppercase">{selectedMessage.from.name || 'Unknown Node'}</h3>
+                    <p className="text-[10px] text-cyber-cyan font-black tracking-[0.3em] uppercase">{selectedMessage.from.address}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex bg-slate-100 p-1.5 rounded-2xl mr-2">
+                <div className="flex items-center gap-4">
+                  <div className="flex bg-white/5 p-1.5 rounded-2xl">
                     <button 
                       onClick={() => setViewMode('html')}
-                      className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'html' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                      className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'html' ? 'bg-cyber-cyan text-dark-950 shadow-lg shadow-cyber-cyan/20' : 'text-slate-500 hover:text-slate-300'}`}
                     >
-                      HTML
+                      Decoded
                     </button>
                     <button 
                       onClick={() => setViewMode('text')}
-                      className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'text' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                      className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'text' ? 'bg-cyber-cyan text-dark-950 shadow-lg shadow-cyber-cyan/20' : 'text-slate-500 hover:text-slate-300'}`}
                     >
-                      Plain
+                      Source
                     </button>
                   </div>
                   <button 
                     onClick={() => deleteMessage(selectedMessage.id, selectedMessage.accountId)}
-                    className="p-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-2xl transition-all shadow-sm"
-                    title="Delete message"
+                    className="p-3 bg-cyber-red/10 hover:bg-cyber-red/20 text-cyber-red rounded-xl border border-cyber-red/20 transition-all"
+                    title="Purge Transmission"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
                   <button 
                     onClick={() => setSelectedMessage(null)}
-                    className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl transition-all font-black text-xs uppercase tracking-widest"
+                    className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
                   >
-                    Close
+                    <X className="w-6 h-6 text-slate-500" />
                   </button>
                 </div>
               </div>
 
-              <div className="p-8 bg-slate-50/50 border-b border-slate-100 shrink-0">
-                <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">
-                  <Clock className="w-3.5 h-3.5" />
+              <div className="p-8 bg-white/[0.02] border-b border-white/5 shrink-0">
+                <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-3">
+                  <Clock className="w-3.5 h-3.5 text-cyber-cyan" />
                   Received {new Date(selectedMessage.createdAt).toLocaleString()}
                 </div>
-                <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-4 leading-tight">{selectedMessage.subject || '(No Subject)'}</h2>
+                <h2 className="text-3xl font-black text-white tracking-tight mb-4 leading-tight">{selectedMessage.subject || '(No Subject)'}</h2>
                 <div className="flex items-center gap-3">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Recipient</span>
-                  <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">{selectedMessage.to[0].address}</span>
+                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Recipient Node</span>
+                  <span className="text-[10px] font-black text-cyber-cyan bg-cyber-cyan/10 px-3 py-1 rounded-lg border border-cyber-cyan/20">{selectedMessage.to[0].address}</span>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-8 bg-white custom-scrollbar">
+              <div className="flex-1 overflow-y-auto p-8 bg-dark-950/50 custom-scrollbar">
                 {viewMode === 'html' && selectedMessage.html && selectedMessage.html.length > 0 ? (
                   <div 
-                    className="prose prose-slate max-w-none min-h-[300px] text-slate-700"
+                    className="prose prose-invert max-w-none min-h-[300px] 
+                      prose-p:text-slate-300 prose-p:leading-relaxed
+                      prose-headings:text-white prose-headings:font-black
+                      prose-a:text-cyber-cyan prose-a:no-underline hover:prose-a:underline
+                      prose-strong:text-white prose-strong:font-black
+                      prose-img:rounded-3xl prose-img:border prose-img:border-white/10"
                     dangerouslySetInnerHTML={{ __html: selectedMessage.html[0] }} 
                   />
                 ) : (
-                  <div className="whitespace-pre-wrap text-slate-700 text-sm font-medium leading-relaxed min-h-[300px] font-mono bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                  <div className="whitespace-pre-wrap text-slate-300 text-sm font-medium leading-relaxed min-h-[300px] font-mono bg-dark-900 p-8 rounded-3xl border border-white/5">
                     {selectedMessage.text || 'No content available.'}
                   </div>
                 )}
               </div>
               
-              <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-center shrink-0">
-                <div className="flex items-center gap-3 px-6 py-3 bg-amber-50 border border-amber-100 rounded-2xl">
-                  <ShieldCheck className="w-4 h-4 text-amber-600" />
-                  <p className="text-[11px] text-amber-700 font-bold uppercase tracking-wider">
-                    Security Notice: Links in temporary emails may be unsafe. Proceed with caution.
+              <div className="p-8 bg-dark-900/50 border-t border-white/5 flex justify-center shrink-0">
+                <div className="flex items-center gap-3 px-8 py-4 bg-cyber-amber/5 border border-cyber-amber/20 rounded-2xl shadow-[0_0_15px_rgba(254,228,64,0.05)]">
+                  <ShieldCheck className="w-5 h-5 text-cyber-amber" />
+                  <p className="text-[11px] text-cyber-amber font-black uppercase tracking-widest">
+                    NEURAL_ADVISORY: External links may contain malicious payloads. Proceed with caution.
                   </p>
                 </div>
               </div>
@@ -1782,74 +1852,74 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowAuthModal(false)}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+              className="absolute inset-0 bg-dark-950/80 backdrop-blur-md"
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md bg-dark-900 rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/5"
+              className="relative w-full max-w-md glass rounded-[3rem] shadow-2xl overflow-hidden border border-white/5"
             >
-              <div className="p-10">
-                <div className="flex items-center justify-between mb-10">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-cyber-cyan/20 rounded-xl flex items-center justify-center shadow-lg shadow-cyber-cyan/10">
-                      {authMode === 'login' ? <LogIn className="w-5 h-5 text-cyber-cyan" /> : <UserPlus className="w-5 h-5 text-cyber-cyan" />}
+              <div className="p-12">
+                <div className="flex items-center justify-between mb-12">
+                  <div className="flex items-center gap-5">
+                    <div className="w-14 h-14 bg-cyber-cyan/10 rounded-2xl flex items-center justify-center border border-cyber-cyan/20 shadow-[0_0_20px_rgba(0,255,255,0.1)]">
+                      {authMode === 'login' ? <LogIn className="w-7 h-7 text-cyber-cyan" /> : <UserPlus className="w-7 h-7 text-cyber-cyan" />}
                     </div>
                     <div>
-                      <h3 className="text-xl font-black text-white tracking-tight">{authMode === 'login' ? 'Welcome Back' : 'Create Account'}</h3>
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{authMode === 'login' ? 'Login to your secure vault' : 'Join the secure network'}</p>
+                      <h3 className="text-2xl font-black text-white tracking-tighter uppercase">{authMode === 'login' ? 'Agent Login' : 'New Agent'}</h3>
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">{authMode === 'login' ? 'Access Secure Vault' : 'Initialize Protocol'}</p>
                     </div>
                   </div>
                   <button 
                     onClick={() => setShowAuthModal(false)}
-                    className="p-2 hover:bg-white/5 rounded-xl transition-colors text-slate-500"
+                    className="p-3 hover:bg-white/5 rounded-xl transition-colors text-slate-500"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-6 h-6" />
                   </button>
                 </div>
 
-                <form onSubmit={handleAuth} className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email Address</label>
+                <form onSubmit={handleAuth} className="space-y-8">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-1">Neural ID (Email)</label>
                     <div className="relative">
-                      <MailIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                      <MailIcon className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                       <input 
                         type="email" 
                         required
                         value={authEmail}
                         onChange={(e) => setAuthEmail(e.target.value)}
-                        placeholder="name@example.com"
-                        className="w-full pl-12 pr-4 py-4 bg-dark-800 border border-white/5 rounded-2xl text-sm font-bold text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-cyber-cyan/20 focus:border-cyber-cyan transition-all"
+                        placeholder="agent@securehub.net"
+                        className="w-full pl-14 pr-6 py-5 bg-white/5 border border-white/5 rounded-2xl text-sm font-bold text-white placeholder:text-slate-700 focus:outline-none focus:ring-2 focus:ring-cyber-cyan/20 focus:border-cyber-cyan/50 transition-all"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Password</label>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-1">Access Key (Password)</label>
                     <div className="relative">
-                      <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                      <Key className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                       <input 
                         type="password" 
                         required
                         value={authPassword}
                         onChange={(e) => setAuthPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className="w-full pl-12 pr-4 py-4 bg-dark-800 border border-white/5 rounded-2xl text-sm font-bold text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-cyber-cyan/20 focus:border-cyber-cyan transition-all"
+                        placeholder="••••••••••••"
+                        className="w-full pl-14 pr-6 py-5 bg-white/5 border border-white/5 rounded-2xl text-sm font-bold text-white placeholder:text-slate-700 focus:outline-none focus:ring-2 focus:ring-cyber-cyan/20 focus:border-cyber-cyan/50 transition-all"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     <button 
                       type="submit"
                       disabled={authLoading}
-                      className="w-full py-4 bg-cyber-cyan hover:bg-cyber-cyan/90 text-dark-950 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-cyber-cyan/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-3"
+                      className="w-full py-5 bg-cyber-cyan text-dark-950 rounded-2xl font-black text-xs uppercase tracking-[0.4em] shadow-lg shadow-cyber-cyan/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-3"
                     >
                       {authLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="w-5 h-5 animate-spin" />
                       ) : (
-                        authMode === 'login' ? 'Sign In' : 'Create Account'
+                        authMode === 'login' ? 'Initialize Session' : 'Register Identity'
                       )}
                     </button>
 
@@ -1857,8 +1927,8 @@ export default function App() {
                       <div className="absolute inset-0 flex items-center">
                         <div className="w-full border-t border-white/5"></div>
                       </div>
-                      <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
-                        <span className="bg-dark-900 px-4 text-slate-500">Or continue with</span>
+                      <div className="relative flex justify-center text-[9px] font-black uppercase tracking-[0.4em]">
+                        <span className="bg-dark-900 px-6 text-slate-600">Cross-Auth Protocol</span>
                       </div>
                     </div>
 
@@ -1866,27 +1936,27 @@ export default function App() {
                       type="button"
                       onClick={handleGoogleLogin}
                       disabled={authLoading}
-                      className="w-full py-4 bg-dark-800 border border-white/5 hover:border-cyber-cyan/30 text-slate-300 rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-3 shadow-sm active:scale-[0.98]"
+                      className="w-full py-5 bg-white/5 border border-white/5 hover:border-cyber-cyan/30 text-slate-300 rounded-2xl font-black text-xs uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-4 shadow-sm active:scale-[0.98]"
                     >
-                      <svg className="w-4 h-4" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5" viewBox="0 0 24 24">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
                         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
                         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                       </svg>
-                      Google Account
+                      Google Identity
                     </button>
                   </div>
                 </form>
 
-                <div className="mt-8 pt-8 border-t border-white/5 text-center">
-                  <p className="text-xs font-bold text-slate-500">
-                    {authMode === 'login' ? "Don't have an account?" : "Already have an account?"}
+                <div className="mt-10 pt-10 border-t border-white/5 text-center">
+                  <p className="text-xs font-bold text-slate-600">
+                    {authMode === 'login' ? "New Agent?" : "Existing Agent?"}
                     <button 
                       onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
-                      className="ml-2 text-cyber-cyan hover:text-cyber-cyan/80 font-black uppercase tracking-widest text-[10px]"
+                      className="ml-3 text-cyber-cyan hover:text-cyber-cyan/80 font-black uppercase tracking-[0.2em] text-[10px]"
                     >
-                      {authMode === 'login' ? 'Register Now' : 'Login Here'}
+                      {authMode === 'login' ? 'Initialize Registration' : 'Access Terminal'}
                     </button>
                   </p>
                 </div>
