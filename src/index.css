@@ -158,6 +158,14 @@
   .text-glow-purple {
     text-shadow: 0 0 10px rgba(155, 93, 229, 0.5);
   }
+
+  .custom-scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .custom-scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .animate-float {

@@ -78,6 +78,7 @@ import { GmailGenerator } from './components/tools/GmailGenerator';
 import { AddressGenerator } from './components/tools/AddressGenerator';
 import { ProxyChecker } from './components/tools/ProxyChecker';
 import { QRCodeGenerator } from './components/tools/QRCodeGenerator';
+import { UserAgentGenerator } from './components/tools/UserAgentGenerator';
 import { TimerTool } from './components/tools/TimerTool';
 
 import { getCardBrand, luhnCheck } from './lib/ccUtils';
@@ -107,12 +108,14 @@ export default function App() {
   const [showClearInboxConfirm, setShowClearInboxConfirm] = useState(false);
   const [viewMode, setViewMode] = useState<'html' | 'text'>('html');
   const [toast, setToast] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'mail' | 'cc-gen' | 'cc-check' | 'gmail-gen' | 'address-gen' | 'proxy-check' | 'qr-gen' | 'timer'>(() => {
+  const [activeTab, setActiveTab] = useState<'mail' | 'cc-gen' | 'cc-check' | 'gmail-gen' | 'address-gen' | 'proxy-check' | 'qr-gen' | 'ua-gen' | 'timer'>(() => {
     const saved = localStorage.getItem('securehub_active_tab');
     return (saved as any) || 'mail';
   });
 
   // Lifted Timer State
+  const [qrState, setQrState] = useState({ results: [] as string[] });
+  const [uaState, setUaState] = useState({ results: [] as string[] });
   const [timers, setTimers] = useState<any[]>(() => {
     const saved = localStorage.getItem('securehub_timers');
     return saved ? JSON.parse(saved) : [];
@@ -129,33 +132,46 @@ export default function App() {
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
-      let changed = false;
       
-      const updated = timers.map(t => {
-        if (t.status === 'running' && t.targetTimestamp && now >= t.targetTimestamp) {
-          changed = true;
-          // Play sound globally
-          if (audioRef.current) {
-            audioRef.current.play().catch(() => {});
+      setTimers(prevTimers => {
+        let changed = false;
+        const updated = prevTimers.map(t => {
+          if (t.status === 'running' && t.targetTimestamp && now >= t.targetTimestamp) {
+            changed = true;
+            // Play sound globally
+            if (audioRef.current) {
+              // Reset and play to ensure it triggers even if already playing
+              audioRef.current.currentTime = 0;
+              audioRef.current.play().catch(e => console.warn('Audio play blocked:', e));
+            }
+            return { 
+              ...t, 
+              status: 'completed', 
+              targetTimestamp: null, 
+              remainingAtPause: 0,
+              completedAt: now 
+            };
           }
-          return { 
-            ...t, 
-            status: 'completed', 
-            targetTimestamp: null, 
-            remainingAtPause: 0,
-            completedAt: now // Track when it finished
-          };
-        }
-        return t;
+          return t;
+        });
+        
+        return changed ? updated : prevTimers;
       });
-      
-      if (changed) {
-        setTimers(updated);
-      }
-    }, 1000);
+    }, 100);
     
     return () => clearInterval(interval);
-  }, [timers]);
+  }, []); // No dependencies, use functional update
+
+  const navRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (navRef.current) {
+      const activeBtn = navRef.current.querySelector(`[data-tab="${activeTab}"]`);
+      if (activeBtn) {
+        activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+  }, [activeTab]);
 
   const handleTabChange = (tabId: typeof activeTab) => {
     if (tabId !== 'mail' && !user) {
@@ -495,11 +511,14 @@ export default function App() {
   };
 
   // Auth Listener
+  const snapshotUnsubscribeRef = useRef<(() => void) | null>(null);
+
   useEffect(() => {
     const testConnection = async () => {
       try {
         await getDocFromServer(doc(db, 'test', 'connection'));
       } catch (error) {
+        // This is expected to fail if no rules allow it, but we use it to check online status
         if(error instanceof Error && error.message.includes('the client is offline')) {
           console.error("Please check your Firebase configuration. ");
         }
@@ -507,14 +526,22 @@ export default function App() {
     };
     testConnection();
 
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setIsAuthReady(true);
+      
+      // Clean up previous snapshot listener if it exists
+      if (snapshotUnsubscribeRef.current) {
+        snapshotUnsubscribeRef.current();
+        snapshotUnsubscribeRef.current = null;
+      }
+
       if (u) {
         // Load from Firestore
         const userDoc = doc(db, 'users', u.uid);
         const path = `users/${u.uid}`;
-        onSnapshot(userDoc, (snapshot) => {
+        
+        snapshotUnsubscribeRef.current = onSnapshot(userDoc, (snapshot) => {
           if (snapshot.exists()) {
             const data = snapshot.data();
             if (data.savedAccounts && Array.isArray(data.savedAccounts)) {
@@ -526,7 +553,10 @@ export default function App() {
             }
           }
         }, (err) => {
-          handleFirestoreError(err, OperationType.GET, path);
+          // Only handle error if the user is still the same (to avoid race conditions on sign out)
+          if (auth.currentUser?.uid === u.uid) {
+            handleFirestoreError(err, OperationType.GET, path);
+          }
         });
       } else {
         // Load from LocalStorage
@@ -551,7 +581,13 @@ export default function App() {
         }
       }
     });
-    return () => unsubscribe();
+
+    return () => {
+      unsubscribeAuth();
+      if (snapshotUnsubscribeRef.current) {
+        snapshotUnsubscribeRef.current();
+      }
+    };
   }, []);
 
   const saveAccounts = async (updatedAccounts: SavedAccount[]) => {
@@ -1106,6 +1142,7 @@ export default function App() {
             { id: 'address-gen', icon: MapPin, label: 'Virtual Identity', color: 'cyber-amber' },
             { id: 'proxy-check', icon: Globe, label: 'Threat Intelligence', color: 'cyber-green' },
             { id: 'qr-gen', icon: LayoutGrid, label: 'Secure Matrix', color: 'cyber-purple' },
+            { id: 'ua-gen', icon: Globe, label: 'UA Forge', color: 'cyber-cyan' },
             { id: 'timer', icon: Timer, label: 'System Timer', color: 'cyber-cyan' },
           ].map((item) => (
             <button
@@ -1167,46 +1204,58 @@ export default function App() {
       </aside>
 
       {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 w-full glass z-50 border-t border-white/5 px-2 py-3 flex justify-around items-center backdrop-blur-xl">
-        {[
-          { id: 'mail', icon: MailIcon, color: 'cyber-cyan' },
-          { id: 'cc-gen', icon: CreditCard, color: 'cyber-purple' },
-          { id: 'cc-check', icon: Shield, color: 'cyber-pink' },
-          { id: 'timer', icon: Timer, color: 'cyber-cyan' },
-          { id: 'qr-gen', icon: LayoutGrid, color: 'cyber-purple' },
-        ].map((item) => (
+      <div className="lg:hidden fixed bottom-0 left-0 w-full glass z-50 border-t border-white/5 backdrop-blur-2xl">
+        <div ref={navRef} className="flex items-center overflow-x-auto px-4 py-3 gap-1.5 scroll-smooth custom-scrollbar">
+          {[
+            { id: 'mail', icon: MailIcon, activeClass: 'text-cyber-cyan bg-cyber-cyan/10 border-cyber-cyan/20' },
+            { id: 'cc-gen', icon: CreditCard, activeClass: 'text-cyber-purple bg-cyber-purple/10 border-cyber-purple/20' },
+            { id: 'cc-check', icon: Shield, activeClass: 'text-cyber-pink bg-cyber-pink/10 border-cyber-pink/20' },
+            { id: 'gmail-gen', icon: Mail, activeClass: 'text-cyber-blue bg-cyber-blue/10 border-cyber-blue/20' },
+            { id: 'address-gen', icon: MapPin, activeClass: 'text-cyber-amber bg-cyber-amber/10 border-cyber-amber/20' },
+            { id: 'proxy-check', icon: Globe, activeClass: 'text-cyber-green bg-cyber-green/10 border-cyber-green/20' },
+            { id: 'qr-gen', icon: LayoutGrid, activeClass: 'text-cyber-purple bg-cyber-purple/10 border-cyber-purple/20' },
+            { id: 'ua-gen', icon: Globe, activeClass: 'text-cyber-cyan bg-cyber-cyan/10 border-cyber-cyan/20' },
+            { id: 'timer', icon: Timer, activeClass: 'text-cyber-cyan bg-cyber-cyan/10 border-cyber-cyan/20' },
+          ].map((item) => (
+            <button
+              key={item.id}
+              data-tab={item.id}
+              onClick={() => handleTabChange(item.id as any)}
+              className={`p-3 rounded-2xl transition-all relative shrink-0 ${
+                activeTab === item.id 
+                ? `${item.activeClass} shadow-[0_0_15px_rgba(0,0,0,0.2)]` 
+                : 'text-slate-500 hover:text-slate-300 bg-white/5 border border-transparent'
+              }`}
+            >
+              <item.icon className="w-5 h-5" />
+              {activeTab === item.id && (
+                <motion.div 
+                  layoutId="mobile-nav-active"
+                  className="absolute inset-0 rounded-2xl -z-10"
+                />
+              )}
+            </button>
+          ))}
+          <div className="w-px h-8 bg-white/10 shrink-0 mx-1" />
           <button
-            key={item.id}
-            onClick={() => handleTabChange(item.id as any)}
-            className={`p-3 rounded-2xl transition-all relative ${
-              activeTab === item.id 
-              ? `text-${item.color} bg-${item.color}/10` 
-              : 'text-slate-500 hover:text-slate-300'
+            onClick={() => {
+              if (user) signOut(auth);
+              else { setAuthMode('login'); setShowAuthModal(true); }
+            }}
+            className={`p-3 rounded-2xl transition-all relative shrink-0 border ${
+              user 
+                ? 'text-cyber-cyan bg-cyber-cyan/10 border-cyber-cyan/20' 
+                : 'text-slate-500 bg-white/5 border-white/5'
             }`}
           >
-            <item.icon className="w-6 h-6" />
-            {activeTab === item.id && (
-              <motion.div 
-                layoutId="mobile-nav-active"
-                className={`absolute inset-0 bg-${item.color}/10 rounded-2xl -z-10`}
-              />
-            )}
+            {user ? <LogOut className="w-5 h-5" /> : <User className="w-5 h-5" />}
           </button>
-        ))}
-        <button
-          onClick={() => {
-            if (user) signOut(auth);
-            else { setAuthMode('login'); setShowAuthModal(true); }
-          }}
-          className={`p-3 rounded-2xl transition-all relative ${user ? 'text-cyber-cyan' : 'text-slate-500'}`}
-        >
-          {user ? <LogOut className="w-6 h-6" /> : <User className="w-6 h-6" />}
-        </button>
+        </div>
       </div>
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 relative z-10 overflow-hidden">
-        <header className="h-20 lg:h-24 glass border-b border-white/5 px-6 lg:px-10 flex items-center justify-between shrink-0">
+        <header className="h-16 lg:h-24 glass border-b border-white/5 px-6 lg:px-10 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-4">
             <div className="w-1 h-8 bg-cyber-cyan rounded-full shadow-[0_0_15px_rgba(0,245,212,0.8)]" />
             <div>
@@ -1239,7 +1288,7 @@ export default function App() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-10 pb-32 lg:pb-10">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-6 lg:p-10 pb-32 lg:pb-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -1247,7 +1296,7 @@ export default function App() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.98 }}
               transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-              className="max-w-[1600px] mx-auto"
+              className="max-w-[1600px] mx-auto w-full"
             >
               {activeTab === 'mail' && (
           error ? (
@@ -1273,12 +1322,12 @@ export default function App() {
               </button>
             </motion.div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
               {/* Left Column: Identities */}
-              <div className="lg:col-span-4 space-y-8">
-                <div className="p-8 glass rounded-[2.5rem] border border-white/5 relative overflow-hidden">
+              <div className="lg:col-span-4 space-y-6 lg:space-y-8">
+                <div className="p-5 sm:p-8 glass rounded-[1.5rem] sm:rounded-[2.5rem] border border-white/5 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-cyber-cyan/5 rounded-full blur-[40px] -mr-16 -mt-16" />
-                  <div className="flex items-center justify-between mb-10">
+                  <div className="flex items-center justify-between mb-6 sm:mb-10">
                     <div>
                       <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-1">Neural Cache</h2>
                       <h3 className="text-xl font-black text-white tracking-tighter uppercase">Active Identities</h3>
@@ -1359,7 +1408,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="p-8 glass rounded-[2.5rem] border border-white/5 space-y-6">
+                <div className="p-5 sm:p-8 glass rounded-[1.5rem] sm:rounded-[2.5rem] border border-white/5 space-y-6">
                   <div className="flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">
                     <Shield className="w-4 h-4 text-cyber-cyan" /> Encryption Protocol
                   </div>
@@ -1382,8 +1431,8 @@ export default function App() {
 
               {/* Right Column: Unified Inbox */}
               <div className="lg:col-span-8 flex flex-col">
-                <div className="p-8 glass rounded-[2.5rem] border border-white/5 flex-1 flex flex-col min-h-[700px]">
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mb-10">
+                <div className="p-5 sm:p-8 glass rounded-[1.5rem] sm:rounded-[2.5rem] border border-white/5 flex-1 flex flex-col min-h-[500px] lg:min-h-[700px]">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mb-6 sm:mb-10">
                     <div className="flex items-center gap-5">
                       <div className="w-14 h-14 bg-cyber-cyan/10 rounded-2xl flex items-center justify-center border border-cyber-cyan/20 shadow-[0_0_20px_rgba(0,255,255,0.1)]">
                         <Inbox className="w-7 h-7 text-cyber-cyan" />
@@ -1548,6 +1597,10 @@ export default function App() {
 
       {activeTab === 'qr-gen' && (
         <QRCodeGenerator />
+      )}
+
+      {activeTab === 'ua-gen' && (
+        <UserAgentGenerator state={uaState} setState={setUaState} />
       )}
 
       {activeTab === 'timer' && (

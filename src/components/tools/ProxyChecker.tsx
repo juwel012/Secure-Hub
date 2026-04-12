@@ -168,16 +168,16 @@ export const ProxyChecker: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
         <div className="lg:col-span-4">
-          <div className="p-8 glass rounded-[2.5rem] border border-white/5 relative overflow-hidden h-full flex flex-col justify-center">
+          <div className="p-6 sm:p-8 glass rounded-[1.5rem] sm:rounded-[2.5rem] border border-white/5 relative overflow-hidden h-full flex flex-col justify-center">
             <div className="absolute top-0 right-0 w-32 h-32 bg-cyber-cyan/5 rounded-full blur-[40px] -mr-16 -mt-16" />
             <div className="relative z-10">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-cyber-cyan/10 rounded-2xl flex items-center justify-center border border-cyber-cyan/20 shadow-[0_0_20px_rgba(0,255,255,0.1)]">
-                  <Globe className="w-6 h-6 text-cyber-cyan" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-cyber-cyan/10 rounded-xl sm:rounded-2xl flex items-center justify-center border border-cyber-cyan/20 shadow-[0_0_20px_rgba(0,255,255,0.1)]">
+                  <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-cyber-cyan" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Threat <span className="text-cyber-cyan">Intelligence</span></h2>
@@ -192,34 +192,34 @@ export const ProxyChecker: React.FC = () => {
         </div>
 
         <div className="lg:col-span-8">
-          <div className="p-8 glass rounded-[2.5rem] border border-white/5 h-full flex flex-col justify-center space-y-8">
+          <div className="p-6 sm:p-8 glass rounded-[1.5rem] sm:rounded-[2.5rem] border border-white/5 h-full flex flex-col justify-center space-y-6 sm:space-y-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-              <div className="space-y-1">
+              <div className="space-y-2 w-full sm:w-auto">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Intelligence Provider</label>
-                <div className="flex bg-dark-800 p-1 rounded-2xl border border-white/5">
+                <div className="flex bg-dark-800 p-1 rounded-xl sm:rounded-2xl border border-white/5">
                   <button
                     onClick={() => setProvider('fraudlogix')}
-                    className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                    className={`flex-1 sm:flex-none px-4 sm:px-8 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                       provider === 'fraudlogix' ? 'bg-cyber-cyan text-dark-950 shadow-lg shadow-cyber-cyan/30' : 'text-slate-500 hover:text-white'
                     }`}
                   >
-                    Provider Alpha
+                    Alpha
                   </button>
                   <button
                     onClick={() => setProvider('ipqs')}
-                    className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                    className={`flex-1 sm:flex-none px-4 sm:px-8 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                       provider === 'ipqs' ? 'bg-cyber-purple text-white shadow-lg shadow-cyber-purple/30' : 'text-slate-500 hover:text-white'
                     }`}
                   >
-                    Provider Beta
+                    Beta
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
                 <button 
                   onClick={() => setView(view === 'current' ? 'history' : 'current')}
-                  className={`p-4 rounded-2xl border transition-all ${
+                  className={`flex-1 sm:flex-none p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border transition-all flex items-center justify-center ${
                     view === 'history' 
                       ? 'bg-cyber-purple/20 text-cyber-purple border-cyber-purple/30 shadow-[0_0_15px_rgba(168,85,247,0.2)]' 
                       : 'bg-white/5 text-slate-500 border-white/5 hover:bg-cyber-purple/10 hover:text-cyber-purple'
@@ -229,13 +229,13 @@ export const ProxyChecker: React.FC = () => {
                 </button>
                 <button 
                   onClick={view === 'current' ? clearResults : clearHistory}
-                  className="p-4 bg-white/5 hover:bg-cyber-red/10 text-slate-500 hover:text-cyber-red rounded-2xl border border-white/5 transition-all"
+                  className="flex-1 sm:flex-none p-3.5 sm:p-4 bg-white/5 hover:bg-cyber-red/10 text-slate-500 hover:text-cyber-red rounded-xl sm:rounded-2xl border border-white/5 transition-all flex items-center justify-center"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
                 <button 
                   onClick={copyResults}
-                  className="p-4 bg-white/5 hover:bg-cyber-cyan/10 text-slate-500 hover:text-cyber-cyan rounded-2xl border border-white/5 transition-all"
+                  className="flex-1 sm:flex-none p-3.5 sm:p-4 bg-white/5 hover:bg-cyber-cyan/10 text-slate-500 hover:text-cyber-cyan rounded-xl sm:rounded-2xl border border-white/5 transition-all flex items-center justify-center"
                 >
                   {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                 </button>
@@ -246,26 +246,26 @@ export const ProxyChecker: React.FC = () => {
       </div>
 
       {/* Main Interface Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
         <div className="lg:col-span-5 space-y-6">
           <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-cyber-cyan to-cyber-purple rounded-[2.5rem] blur opacity-10 group-focus-within:opacity-25 transition duration-1000" />
-            <div className="relative glass rounded-[2.5rem] border border-white/5 overflow-hidden">
-              <div className="absolute top-5 left-8 flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+            <div className="absolute -inset-1 bg-gradient-to-r from-cyber-cyan to-cyber-purple rounded-[1.5rem] sm:rounded-[2.5rem] blur opacity-10 group-focus-within:opacity-25 transition duration-1000" />
+            <div className="relative glass rounded-[1.5rem] sm:rounded-[2.5rem] border border-white/5 overflow-hidden">
+              <div className="absolute top-5 left-6 sm:left-8 flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">
                 <Terminal className="w-4 h-4" /> Network Terminal
               </div>
               <textarea
                 placeholder="ENTER IPs FOR ANALYSIS (ONE PER LINE)"
-                className="w-full h-[400px] p-12 pt-16 bg-transparent outline-none transition-all resize-none font-mono text-sm text-cyber-cyan placeholder:text-slate-700 custom-scrollbar"
+                className="w-full h-[200px] sm:h-[400px] p-6 sm:p-12 pt-16 bg-transparent outline-none transition-all resize-none font-mono text-sm text-cyber-cyan placeholder:text-slate-700 custom-scrollbar"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 disabled={checking}
               />
-              <div className="absolute bottom-8 right-8">
+              <div className="absolute bottom-6 sm:bottom-8 right-6 sm:right-8">
                 <button
                   onClick={handleCheck}
                   disabled={checking || !input.trim()}
-                  className="px-8 py-4 bg-cyber-cyan hover:bg-cyber-cyan/90 text-dark-950 rounded-2xl font-black text-xs uppercase tracking-[0.3em] flex items-center gap-3 transition-all shadow-lg shadow-cyber-cyan/20 active:scale-[0.98] disabled:opacity-50"
+                  className="px-6 sm:px-8 py-3.5 sm:py-4 bg-cyber-cyan hover:bg-cyber-cyan/90 text-dark-950 rounded-xl sm:rounded-2xl font-black text-xs uppercase tracking-[0.3em] flex items-center gap-3 transition-all shadow-lg shadow-cyber-cyan/20 active:scale-[0.98] disabled:opacity-50"
                 >
                   {checking ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                   {checking ? 'Analyzing...' : 'Start Analysis'}
@@ -274,7 +274,7 @@ export const ProxyChecker: React.FC = () => {
             </div>
           </div>
 
-          <div className="p-8 glass rounded-[2.5rem] border border-white/5 space-y-6">
+          <div className="p-6 sm:p-8 glass rounded-[1.5rem] sm:rounded-[2.5rem] border border-white/5 space-y-4 sm:space-y-6">
             <div className="flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">
               <Shield className="w-4 h-4" /> Security Protocol
             </div>
@@ -285,28 +285,28 @@ export const ProxyChecker: React.FC = () => {
         </div>
 
         <div className="lg:col-span-7 flex flex-col">
-          <div className="flex items-center justify-between mb-6 px-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 px-4">
             <div className="flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">
               <Activity className="w-4 h-4 text-cyber-cyan" /> 
               {view === 'current' ? 'Analysis Feed' : 'Historical Archive'}
             </div>
-            <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
+            <div className="flex bg-white/5 p-1 rounded-xl border border-white/5 w-full sm:w-auto">
               <button 
                 onClick={() => setView('current')}
-                className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${view === 'current' ? 'bg-cyber-cyan text-dark-950' : 'text-slate-500 hover:text-slate-300'}`}
+                className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${view === 'current' ? 'bg-cyber-cyan text-dark-950' : 'text-slate-500 hover:text-slate-300'}`}
               >
                 Live
               </button>
               <button 
                 onClick={() => setView('history')}
-                className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${view === 'history' ? 'bg-cyber-purple text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${view === 'history' ? 'bg-cyber-purple text-white' : 'text-slate-500 hover:text-slate-300'}`}
               >
                 Archive
               </button>
             </div>
           </div>
           
-          <div className="flex-1 space-y-4 overflow-y-auto max-h-[700px] pr-4 custom-scrollbar">
+          <div className="flex-1 space-y-4 overflow-y-auto max-h-[400px] lg:max-h-[700px] pr-2 sm:pr-4 custom-scrollbar">
             <AnimatePresence mode="popLayout">
               {((view === 'current' ? results : historyResults).length === 0) ? (
                 <div className="h-full flex flex-col items-center justify-center text-center py-40 glass border border-white/5 rounded-[3rem]">
@@ -323,7 +323,7 @@ export const ProxyChecker: React.FC = () => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.05 }}
                       onClick={() => setExpandedIp(expandedIp === res.ip ? null : res.ip)}
-                      className={`p-6 rounded-2xl border cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99] ${
+                      className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl border cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99] ${
                         res.status === 'error' 
                           ? 'bg-cyber-red/5 border-cyber-red/30 hover:shadow-[0_0_30px_rgba(255,59,48,0.1)]' 
                           : res.data?.is_proxy 
@@ -365,7 +365,7 @@ export const ProxyChecker: React.FC = () => {
                           exit={{ height: 0, opacity: 0 }}
                           className="overflow-hidden"
                         >
-                          <div className="p-8 glass border border-white/5 rounded-[2rem] grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                          <div className="p-6 sm:p-8 glass border border-white/5 rounded-[1.5rem] sm:rounded-[2rem] grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
                             <div className="space-y-4">
                               <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Threat Assessment</p>
                               <div className="space-y-1">

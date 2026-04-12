@@ -233,16 +233,16 @@ Weight/Height: ${addr.weight} / ${addr.height}
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
         <div className="lg:col-span-4">
-          <div className="p-8 glass rounded-[2.5rem] border border-white/5 relative overflow-hidden h-full flex flex-col justify-center">
+          <div className="p-6 sm:p-8 glass rounded-[1.5rem] sm:rounded-[2.5rem] border border-white/5 relative overflow-hidden h-full flex flex-col justify-center">
             <div className="absolute top-0 right-0 w-32 h-32 bg-cyber-purple/5 rounded-full blur-[40px] -mr-16 -mt-16" />
             <div className="relative z-10">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-cyber-purple/10 rounded-2xl flex items-center justify-center border border-cyber-purple/20 shadow-[0_0_20px_rgba(188,19,254,0.1)]">
-                  <MapPin className="w-6 h-6 text-cyber-purple" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-cyber-purple/10 rounded-xl sm:rounded-2xl flex items-center justify-center border border-cyber-purple/20 shadow-[0_0_20px_rgba(188,19,254,0.1)]">
+                  <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-cyber-purple" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Virtual <span className="text-cyber-purple">Identity</span></h2>
@@ -257,14 +257,14 @@ Weight/Height: ${addr.weight} / ${addr.height}
         </div>
 
         <div className="lg:col-span-8">
-          <div className="p-8 glass rounded-[2.5rem] border border-white/5 h-full flex flex-col justify-center space-y-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          <div className="p-6 sm:p-8 glass rounded-[1.5rem] sm:rounded-[2.5rem] border border-white/5 h-full flex flex-col justify-center space-y-6 sm:space-y-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
               <div className="space-y-4">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Target Region</label>
                 <div className="relative group">
                   <Globe className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-cyber-purple/40 group-focus-within:text-cyber-purple transition-colors" />
                   <select 
-                    className="w-full pl-14 pr-10 py-5 bg-dark-800 border border-white/5 rounded-2xl text-sm font-bold text-white appearance-none cursor-pointer focus:border-cyber-purple outline-none transition-all"
+                    className="w-full pl-14 pr-10 py-4 sm:py-5 bg-dark-800 border border-white/5 rounded-xl sm:rounded-2xl text-sm font-bold text-white appearance-none cursor-pointer focus:border-cyber-purple outline-none transition-all"
                     value={selectedLocale}
                     onChange={(e) => setSelectedLocale(e.target.value)}
                   >
@@ -282,7 +282,7 @@ Weight/Height: ${addr.weight} / ${addr.height}
                     <button
                       key={g}
                       onClick={() => setGender(g as any)}
-                      className={`py-4 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${
+                      className={`py-3 sm:py-4 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${
                         gender === g 
                           ? 'bg-cyber-purple text-white border-cyber-purple shadow-lg shadow-cyber-purple/20' 
                           : 'bg-white/5 text-slate-500 border-white/5 hover:border-cyber-purple/30'
@@ -299,9 +299,9 @@ Weight/Height: ${addr.weight} / ${addr.height}
       </div>
 
       {/* Main Interface Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
         <div className="lg:col-span-4 space-y-6">
-          <div className="p-8 glass rounded-[2.5rem] border border-white/5 space-y-8">
+          <div className="p-6 sm:p-8 glass rounded-[1.5rem] sm:rounded-[2.5rem] border border-white/5 space-y-6 sm:space-y-8">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Batch Size</label>
@@ -320,14 +320,14 @@ Weight/Height: ${addr.weight} / ${addr.height}
             <button
               onClick={generateAddresses}
               disabled={generating}
-              className="w-full py-5 bg-cyber-purple hover:bg-cyber-purple/90 text-white rounded-2xl font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-4 transition-all shadow-lg shadow-cyber-purple/20 active:scale-[0.98] disabled:opacity-50"
+              className="w-full py-4 sm:py-5 bg-cyber-purple hover:bg-cyber-purple/90 text-white rounded-xl sm:rounded-2xl font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-4 transition-all shadow-lg shadow-cyber-purple/20 active:scale-[0.98] disabled:opacity-50"
             >
               {generating ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
               {generating ? 'Generating Profiles...' : 'Generate Identities'}
             </button>
           </div>
 
-          <div className="p-8 glass rounded-[2.5rem] border border-white/5 space-y-6">
+          <div className="p-6 sm:p-8 glass rounded-[1.5rem] sm:rounded-[2.5rem] border border-white/5 space-y-4 sm:space-y-6">
             <div className="flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">
               <Shield className="w-4 h-4" /> Privacy Policy
             </div>
@@ -344,11 +344,11 @@ Weight/Height: ${addr.weight} / ${addr.height}
             </div>
           </div>
           
-          <div className="flex-1 space-y-6 max-h-[800px] overflow-y-auto pr-4 custom-scrollbar">
+          <div className="flex-1 space-y-6 max-h-[400px] lg:max-h-[800px] overflow-y-auto pr-2 sm:pr-4 custom-scrollbar">
             <AnimatePresence mode="popLayout">
               {results.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-slate-800 py-40 glass border border-white/5 rounded-[3rem]">
-                  <Navigation className="w-20 h-20 mb-6 opacity-5" />
+                <div className="h-full flex flex-col items-center justify-center text-slate-800 py-20 sm:py-40 glass border border-white/5 rounded-[1.5rem] sm:rounded-[3rem]">
+                  <Navigation className="w-16 h-16 sm:w-20 sm:h-20 mb-6 opacity-5" />
                   <p className="text-[10px] font-black uppercase tracking-widest opacity-30">Awaiting Initialization</p>
                 </div>
               ) : (
@@ -358,7 +358,7 @@ Weight/Height: ${addr.weight} / ${addr.height}
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="group glass border border-white/5 hover:border-cyber-purple/40 p-8 rounded-[2.5rem] transition-all shadow-sm hover:shadow-[0_0_40px_rgba(188,19,254,0.1)] relative overflow-hidden"
+                    className="group glass border border-white/5 hover:border-cyber-purple/40 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] transition-all shadow-sm hover:shadow-[0_0_40px_rgba(188,19,254,0.1)] relative overflow-hidden"
                   >
                     {/* Hover Glow */}
                     <div className="absolute inset-0 bg-cyber-purple/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
@@ -367,12 +367,12 @@ Weight/Height: ${addr.weight} / ${addr.height}
                     
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-8 relative z-10">
                       <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-dark-900 rounded-2xl flex items-center justify-center text-slate-500 group-hover:text-cyber-purple transition-colors border border-white/5 group-hover:border-cyber-purple/30 shadow-inner">
-                          <User className="w-7 h-7" />
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 bg-dark-900 rounded-xl sm:rounded-2xl flex items-center justify-center text-slate-500 group-hover:text-cyber-purple transition-colors border border-white/5 group-hover:border-cyber-purple/30 shadow-inner">
+                          <User className="w-6 h-6 sm:w-7 sm:h-7" />
                         </div>
                         <div>
                           <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-0.5 group-hover:text-cyber-purple/60 transition-colors">Profile #{i + 1}</p>
-                          <p className="text-xl font-black text-white flex items-center gap-3 group-hover:text-cyber-purple transition-colors">
+                          <p className="text-lg sm:text-xl font-black text-white flex items-center gap-3 group-hover:text-cyber-purple transition-colors">
                             {addr.name}
                             <span className={`text-[10px] px-2 py-0.5 rounded-md ${addr.gender === 'Male' ? 'bg-blue-500/20 text-blue-400' : 'bg-pink-500/20 text-pink-400'}`}>
                               {addr.gender}
@@ -383,7 +383,7 @@ Weight/Height: ${addr.weight} / ${addr.height}
                       <div className="flex items-center gap-2 w-full sm:w-auto">
                         <button 
                           onClick={() => copyAddress(addr, i)}
-                          className="flex-1 sm:flex-none px-6 py-3 bg-dark-950 hover:bg-cyber-purple/20 text-slate-500 hover:text-cyber-purple rounded-xl transition-all border border-white/5 hover:border-cyber-purple/30 text-[10px] font-black uppercase tracking-widest"
+                          className="flex-1 sm:flex-none px-4 sm:px-6 py-3 bg-dark-950 hover:bg-cyber-purple/20 text-slate-500 hover:text-cyber-purple rounded-xl transition-all border border-white/5 hover:border-cyber-purple/30 text-[10px] font-black uppercase tracking-widest"
                         >
                           Copy Profile
                         </button>
@@ -435,16 +435,16 @@ Weight/Height: ${addr.weight} / ${addr.height}
                       </div>
                     </div>
 
-                    <div className="mt-6 pt-6 border-t border-white/5 flex flex-wrap gap-4 relative z-10">
-                      <div className="bg-dark-950/30 px-4 py-2 rounded-xl border border-white/5 flex items-center gap-3">
+                    <div className="mt-6 pt-6 border-t border-white/5 flex flex-wrap gap-3 sm:gap-4 relative z-10">
+                      <div className="bg-dark-950/30 px-3 sm:px-4 py-2 rounded-xl border border-white/5 flex items-center gap-2 sm:gap-3">
                         <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Age</p>
                         <p className="text-[10px] font-bold text-cyber-purple">{addr.age}</p>
                       </div>
-                      <div className="bg-dark-950/30 px-4 py-2 rounded-xl border border-white/5 flex items-center gap-3">
+                      <div className="bg-dark-950/30 px-3 sm:px-4 py-2 rounded-xl border border-white/5 flex items-center gap-2 sm:gap-3">
                         <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Weight</p>
                         <p className="text-[10px] font-bold text-slate-400">{addr.weight}</p>
                       </div>
-                      <div className="bg-dark-950/30 px-4 py-2 rounded-xl border border-white/5 flex items-center gap-3">
+                      <div className="bg-dark-950/30 px-3 sm:px-4 py-2 rounded-xl border border-white/5 flex items-center gap-2 sm:gap-3">
                         <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Height</p>
                         <p className="text-[10px] font-bold text-slate-400">{addr.height}</p>
                       </div>

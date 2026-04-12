@@ -14,11 +14,16 @@ service cloud.firestore {
       return isAuthenticated() && 
         ((exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'admin') ||
-         (request.auth.token.email == "mdatikulislamjuwel6@gmail.com" && request.auth.token.email_verified == true));
+         (request.auth.token.get('email', '') == "mdatikulislamjuwel6@gmail.com" && request.auth.token.get('email_verified', false) == true));
     }
 
     function hasOnlyAllowedFields(fields) {
       return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // Connection Test Path
+    match /test/connection {
+      allow read: if true;
     }
 
     // Domain Validators

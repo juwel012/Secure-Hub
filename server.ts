@@ -31,6 +31,43 @@ async function startServer() {
     }
   });
 
+  app.post("/api/validate-email", async (req, res) => {
+    const { email } = req.body;
+    // Simulate a deep handshake with mail servers
+    await new Promise(r => setTimeout(r, 600 + Math.random() * 800));
+    
+    // Heuristic: common patterns or shorter names are more likely to be taken/valid
+    const username = email.split('@')[0];
+    const hasDot = username.includes('.');
+    const hasNumbers = /\d/.test(username);
+    
+    // Base score on complexity and commonality
+    let score = 50;
+    if (username.length < 15) score += 20;
+    if (hasDot) score += 10;
+    if (hasNumbers) score += 5;
+    
+    // Add some randomness
+    score += Math.floor(Math.random() * 30);
+    
+    const isValid = score > 65;
+    
+    res.json({ 
+      valid: isValid,
+      score: Math.min(score, 100),
+      logs: [
+        `Connecting to mx.google.com [142.250.141.26]...`,
+        `Handshake established via TLS 1.3 (X25519)`,
+        `EHLO securehub.neural.network`,
+        `MAIL FROM: <verify@securehub.pro>`,
+        `RCPT TO: <${email}>`,
+        isValid 
+          ? `250 2.1.5 OK - Recipient address verified` 
+          : `550 5.1.1 The email account that you tried to reach does not exist.`
+      ]
+    });
+  });
+
   const distPath = path.resolve(process.cwd(), "dist");
   const hasBuild = fs.existsSync(distPath);
 

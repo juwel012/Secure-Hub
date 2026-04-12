@@ -75,26 +75,26 @@ export const CCGenerator: React.FC<CCGeneratorProps> = ({ state, setState }) => 
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Visual Card Preview Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
         <div className="lg:col-span-5">
           <div className="relative group perspective-1000">
             <motion.div 
               initial={{ rotateY: -20, rotateX: 10 }}
               animate={{ rotateY: 0, rotateX: 0 }}
-              className="relative w-full aspect-[1.586/1] glass rounded-[2rem] border border-white/10 p-8 flex flex-col justify-between overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.5)]"
+              className="relative w-full aspect-[1.586/1] glass rounded-[1.5rem] sm:rounded-[2rem] border border-white/10 p-6 sm:p-8 flex flex-col justify-between overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.5)]"
             >
               {/* Card Background Effects */}
               <div className="absolute inset-0 bg-gradient-to-br from-cyber-purple/20 via-transparent to-cyber-cyan/20 opacity-50" />
               <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[radial-gradient(circle,rgba(0,245,212,0.05)_0%,transparent_70%)] animate-pulse" />
               
               <div className="relative z-10 flex justify-between items-start">
-                <div className="w-12 h-12 bg-gradient-to-br from-cyber-cyan to-cyber-blue rounded-xl flex items-center justify-center border border-white/20 shadow-lg">
-                  <Cpu className="w-6 h-6 text-dark-950" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-cyber-cyan to-cyber-blue rounded-xl flex items-center justify-center border border-white/20 shadow-lg">
+                  <Cpu className="w-5 h-5 sm:w-6 sm:h-6 text-dark-950" />
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Virtual Card</p>
+                  <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Virtual Matrix</p>
                   <p className="text-xs font-bold text-cyber-cyan">SECUREHUB PRO</p>
                 </div>
               </div>
@@ -123,7 +123,7 @@ export const CCGenerator: React.FC<CCGeneratorProps> = ({ state, setState }) => 
         </div>
 
         <div className="lg:col-span-7 flex flex-col justify-center">
-          <div className="p-8 glass rounded-[2.5rem] border border-white/5 relative overflow-hidden">
+          <div className="p-6 sm:p-8 glass rounded-[1.5rem] sm:rounded-[2.5rem] border border-white/5 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-cyber-cyan/5 rounded-full blur-[40px] -mr-16 -mt-16" />
             <div className="relative z-10">
               <div className="flex items-center gap-4 mb-4">
@@ -141,17 +141,17 @@ export const CCGenerator: React.FC<CCGeneratorProps> = ({ state, setState }) => 
       </div>
 
       {/* Configuration Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
         <div className="lg:col-span-5 space-y-6">
-          <div className="p-8 glass rounded-[2.5rem] border border-white/5 space-y-8">
+          <div className="p-6 sm:p-8 glass rounded-[1.5rem] sm:rounded-[2.5rem] border border-white/5 space-y-6 sm:space-y-8">
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Enter BIN</label>
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">BIN Matrix</label>
               <div className="relative group">
                 <input
                   type="text"
                   maxLength={6}
                   placeholder="400000"
-                  className="w-full p-5 bg-dark-800 border border-white/5 rounded-2xl text-xl font-mono font-black text-cyber-cyan placeholder:text-slate-700 focus:border-cyber-cyan focus:ring-4 focus:ring-cyber-cyan/10 outline-none transition-all"
+                  className="w-full p-4 sm:p-5 bg-dark-800 border border-white/5 rounded-xl sm:rounded-2xl text-xl font-mono font-black text-cyber-cyan placeholder:text-slate-700 focus:border-cyber-cyan focus:ring-4 focus:ring-cyber-cyan/10 outline-none transition-all"
                   value={bin}
                   onChange={(e) => setBin(e.target.value)}
                 />
@@ -175,11 +175,11 @@ export const CCGenerator: React.FC<CCGeneratorProps> = ({ state, setState }) => 
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-3">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Expiry Month</label>
                 <select 
-                  className="w-full p-5 bg-dark-800 border border-white/5 rounded-2xl text-sm font-bold text-white appearance-none cursor-pointer focus:border-cyber-cyan outline-none transition-all"
+                  className="w-full p-4 sm:p-5 bg-dark-800 border border-white/5 rounded-xl sm:rounded-2xl text-sm font-bold text-white appearance-none cursor-pointer focus:border-cyber-cyan outline-none transition-all"
                   value={month}
                   onChange={(e) => setMonth(e.target.value)}
                 >
@@ -192,7 +192,7 @@ export const CCGenerator: React.FC<CCGeneratorProps> = ({ state, setState }) => 
               <div className="space-y-3">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Expiry Year</label>
                 <select 
-                  className="w-full p-5 bg-dark-800 border border-white/5 rounded-2xl text-sm font-bold text-white appearance-none cursor-pointer focus:border-cyber-cyan outline-none transition-all"
+                  className="w-full p-4 sm:p-5 bg-dark-800 border border-white/5 rounded-xl sm:rounded-2xl text-sm font-bold text-white appearance-none cursor-pointer focus:border-cyber-cyan outline-none transition-all"
                   value={year}
                   onChange={(e) => setYear(e.target.value)}
                 >
@@ -204,14 +204,14 @@ export const CCGenerator: React.FC<CCGeneratorProps> = ({ state, setState }) => 
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-3">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">CVV Code</label>
                 <input
                   type="text"
                   maxLength={4}
                   placeholder="RAND"
-                  className="w-full p-5 bg-dark-800 border border-white/5 rounded-2xl text-sm font-bold text-white placeholder:text-slate-700 focus:border-cyber-cyan outline-none transition-all"
+                  className="w-full p-4 sm:p-5 bg-dark-800 border border-white/5 rounded-xl sm:rounded-2xl text-sm font-bold text-white placeholder:text-slate-700 focus:border-cyber-cyan outline-none transition-all"
                   value={cvv}
                   onChange={(e) => setCvv(e.target.value)}
                 />
@@ -222,7 +222,7 @@ export const CCGenerator: React.FC<CCGeneratorProps> = ({ state, setState }) => 
                   type="number"
                   min={1}
                   max={100}
-                  className="w-full p-5 bg-dark-800 border border-white/5 rounded-2xl text-sm font-bold text-white focus:border-cyber-cyan outline-none transition-all"
+                  className="w-full p-4 sm:p-5 bg-dark-800 border border-white/5 rounded-xl sm:rounded-2xl text-sm font-bold text-white focus:border-cyber-cyan outline-none transition-all"
                   value={quantity}
                   onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
                 />
@@ -232,31 +232,31 @@ export const CCGenerator: React.FC<CCGeneratorProps> = ({ state, setState }) => 
             <button
               onClick={handleGenerate}
               disabled={generating}
-              className="w-full py-5 bg-cyber-cyan hover:bg-cyber-cyan/90 text-dark-950 rounded-2xl font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-4 transition-all shadow-lg shadow-cyber-cyan/20 active:scale-[0.98] disabled:opacity-50"
+              className="w-full py-4 sm:py-5 bg-cyber-cyan hover:bg-cyber-cyan/90 text-dark-950 rounded-xl sm:rounded-2xl font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-4 transition-all shadow-lg shadow-cyber-cyan/20 active:scale-[0.98] disabled:opacity-50"
             >
               {generating ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5 fill-dark-950" />}
-              {generating ? 'Generating...' : 'Generate Cards'}
+              {generating ? 'Forging Matrix...' : 'Initiate Neural Forge'}
             </button>
           </div>
         </div>
 
         <div className="lg:col-span-7 flex flex-col">
-          <div className="flex items-center justify-between mb-6 px-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 px-4">
             <div className="flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-              <LayoutGrid className="w-4 h-4" /> Generated Cards
+              <LayoutGrid className="w-4 h-4" /> Fabricated Identities
             </div>
             {results.length > 0 && (
               <button 
                 onClick={copyAll}
-                className="flex items-center gap-2 text-[10px] font-black text-cyber-cyan bg-cyber-cyan/10 px-4 py-2 rounded-full hover:bg-cyber-cyan/20 transition-all border border-cyber-cyan/20"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 text-[10px] font-black text-cyber-cyan bg-cyber-cyan/10 px-4 py-2 rounded-full hover:bg-cyber-cyan/20 transition-all border border-cyber-cyan/20"
               >
                 {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                {copied ? 'Copied All' : 'Copy All Cards'}
+                {copied ? 'Copied Matrix' : 'Copy All Cards'}
               </button>
             )}
           </div>
           
-          <div className="flex-1 glass border border-white/5 rounded-[2.5rem] p-8 overflow-y-auto max-h-[600px] custom-scrollbar">
+          <div className="flex-1 glass border border-white/5 rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-8 overflow-y-auto max-h-[400px] lg:max-h-[700px] custom-scrollbar">
             <AnimatePresence mode="popLayout">
               {results.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-slate-800 py-32">
