@@ -80,6 +80,7 @@ import { ProxyChecker } from './components/tools/ProxyChecker';
 import { QRCodeGenerator } from './components/tools/QRCodeGenerator';
 import { UserAgentGenerator } from './components/tools/UserAgentGenerator';
 import { TimerTool } from './components/tools/TimerTool';
+import { TwoFactorAuth } from './components/tools/TwoFactorAuth';
 
 import { getCardBrand, luhnCheck } from './lib/ccUtils';
 
@@ -108,7 +109,7 @@ export default function App() {
   const [showClearInboxConfirm, setShowClearInboxConfirm] = useState(false);
   const [viewMode, setViewMode] = useState<'html' | 'text'>('html');
   const [toast, setToast] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'mail' | 'cc-gen' | 'cc-check' | 'gmail-gen' | 'address-gen' | 'proxy-check' | 'qr-gen' | 'ua-gen' | 'timer'>(() => {
+  const [activeTab, setActiveTab] = useState<'mail' | '2fa' | 'cc-gen' | 'cc-check' | 'gmail-gen' | 'address-gen' | 'proxy-check' | 'qr-gen' | 'ua-gen' | 'timer'>(() => {
     const saved = localStorage.getItem('securehub_active_tab');
     return (saved as any) || 'mail';
   });
@@ -1136,6 +1137,7 @@ export default function App() {
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scrollbar">
           {[
             { id: 'mail', icon: MailIcon, label: 'Secure Mail', color: 'cyber-cyan' },
+            { id: '2fa', icon: Key, label: '2FA Authenticator', color: 'cyber-cyan' },
             { id: 'cc-gen', icon: CreditCard, label: 'Identity Architect', color: 'cyber-purple' },
             { id: 'cc-check', icon: Shield, label: 'Identity Validator', color: 'cyber-pink' },
             { id: 'gmail-gen', icon: Mail, label: 'Alias Generator', color: 'cyber-blue' },
@@ -1208,6 +1210,7 @@ export default function App() {
         <div ref={navRef} className="flex items-center overflow-x-auto px-4 py-3 gap-1.5 scroll-smooth custom-scrollbar">
           {[
             { id: 'mail', icon: MailIcon, activeClass: 'text-cyber-cyan bg-cyber-cyan/10 border-cyber-cyan/20' },
+            { id: '2fa', icon: Key, activeClass: 'text-cyber-cyan bg-cyber-cyan/10 border-cyber-cyan/20' },
             { id: 'cc-gen', icon: CreditCard, activeClass: 'text-cyber-purple bg-cyber-purple/10 border-cyber-purple/20' },
             { id: 'cc-check', icon: Shield, activeClass: 'text-cyber-pink bg-cyber-pink/10 border-cyber-pink/20' },
             { id: 'gmail-gen', icon: Mail, activeClass: 'text-cyber-blue bg-cyber-blue/10 border-cyber-blue/20' },
@@ -1261,6 +1264,7 @@ export default function App() {
             <div>
               <h2 className="text-lg lg:text-xl font-black uppercase tracking-tighter hover-glitch cursor-default">
                 {activeTab === 'mail' && 'Secure Mail Terminal'}
+                {activeTab === '2fa' && 'Neural 2FA Authenticator'}
                 {activeTab === 'cc-gen' && 'Identity Architect'}
                 {activeTab === 'cc-check' && 'Identity Validator'}
                 {activeTab === 'gmail-gen' && 'Alias Generator'}
@@ -1569,6 +1573,10 @@ export default function App() {
             </div>
           )
         )}
+
+      {activeTab === '2fa' && (
+        <TwoFactorAuth />
+      )}
 
       {activeTab === 'cc-gen' && (
         <CCGenerator state={ccGenState} setState={setCcGenState} />
